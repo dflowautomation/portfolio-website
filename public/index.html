@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DFlowAutomation | Epifanio "Don" Sufrir – AI Automation Specialist</title>
+  <meta name="description"
+    content="DFlowAutomation by Epifanio 'Don' Sufrir: Smart AI workflows that scale your business. AI Automation Specialist specializing in n8n, Make.com, Zapier & CRM integrations." />
+  <meta name="keywords"
+    content="AI automation, workflow automation, CRM integration, n8n, Make.com, Zapier, AI agent, business automation" />
+  <meta property="og:title" content="DFlowAutomation | Don Sufrir – AI Automation Specialist" />
+  <meta property="og:description" content="Smart AI workflows that scale your business." />
+  <meta property="og:type" content="website" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Manrope:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@1,400;1,600;1,700&family=Lora:ital,wght@1,400;1,500;1,600&display=swap"
+    rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- Interactive Canvas Background -->
+  <canvas id="bgCanvas"></canvas>
+
+  <!-- ===================== NAVBAR ===================== -->
+  <header id="navbar">
+    <div class="nav-container">
+      <a href="#" class="logo">
+        <span class="logo-d">D</span><span class="logo-flow">FlowAutomation</span>
+      </a>
+      <nav class="nav-links" id="navLinks">
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
+        <a href="#projects">Projects</a>
+        <a href="#testimonials">Testimonials</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="online-indicator-pill">
+          <span class="indicator-dot"></span>
+          <span id="onlineCount">1</span> online
+        </div>
+        <button class="btn-chat-toggle" id="navbarChatBtn">Chat</button>
+        <a href="#book-call" class="btn-primary nav-cta">Book a Call</a>
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#about" class="mobile-link">About</a>
+    <a href="#services" class="mobile-link">Services</a>
+    <a href="#projects" class="mobile-link">Projects</a>
+    <a href="#testimonials" class="mobile-link">Testimonials</a>
+    <a href="#faq" class="mobile-link">FAQ</a>
+    <a href="#contact" class="mobile-link">Contact</a>
+    <div class="mobile-chat-row">
+      <div class="online-indicator-pill">
+        <span class="indicator-dot"></span>
+        <span id="onlineCountMobile">1</span> online
+      </div>
+      <button class="btn-chat-toggle" id="mobileChatBtn">Chat</button>
+    </div>
+    <a href="#book-call" class="btn-primary mobile-link">Book a Call</a>
+  </div>
+
+  <main>
+    <!-- ===================== HERO ===================== -->
+    <section id="hero">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          <em class="badge-em">Available</em> for new projects
+        </div>
+        <h1 class="hero-title">
+          <span class="typing-wrapper">
+            <span id="typingText"></span><span class="typing-cursor">|</span>
+          </span>
+        </h1>
+        <p class="hero-subtitle">
+          <em class="serif-italic">Smart AI workflows</em> that scale your business<span class="em-dash"> —</span> built
+          by
+          <strong><span class="logo-d">D</span><span class="logo-flow">FlowAutomation</span></strong>
+        </p>
+        <div class="hero-tags">
+          <span class="tag">n8n</span>
+          <span class="tag">Make.com</span>
+          <span class="tag">Zapier</span>
+          <span class="tag">AI Agents</span>
+          <span class="tag">CRM</span>
+        </div>
+        <div class="hero-ctas">
+          <a href="#projects" class="btn-primary">
+            <i class="fas fa-rocket"></i> View Projects
+          </a>
+          <a href="#book-call" class="btn-outline">
+            <i class="fas fa-calendar"></i> Book a Free Call
+          </a>
+        </div>
+      </div>
+      <div class="hero-scroll">
+        <span>Scroll down</span>
+        <i class="fas fa-chevron-down scroll-arrow"></i>
+      </div>
+    </section>
+
+    <!-- ===================== ABOUT ===================== -->
+    <section id="about" class="section reveal">
+      <div class="container">
+        <div class="about-grid">
+          <div class="about-image-wrap">
+            <div class="about-image-glow"></div>
+            <div class="about-image-border">
+              <img src="images/avatar.jpg" alt="Epifanio 'Don' Sufrir – AI Automation Specialist" class="about-img"
+                id="profileImg" />
+            </div>
+            <div class="about-badge-card">
+              <i class="fas fa-robot"></i>
+              <span>AI Automation Expert</span>
+            </div>
+          </div>
+          <div class="about-text">
+            <div class="section-label">About Me</div>
+            <h2 class="section-title">Epifanio <span class="gradient-text">"Don"</span> Sufrir</h2>
+            <p class="about-role"><em class="serif-italic">AI Automation Specialist</em></p>
+            <p class="about-desc">
+              I specialize in designing and implementing <em class="lora-italic">cutting-edge AI automation</em> and CRM
+              workflow solutions. My passion is to empower businesses by transforming complex manual processes into <em
+                class="lora-italic">streamlined, intelligent systems</em> that drive growth and efficiency.
+            </p>
+            <ul class="skills-list">
+              <li><i class="fas fa-check-circle"></i> Workflow Automation (n8n, Make, Zapier)</li>
+              <li><i class="fas fa-check-circle"></i> AI Agent Development</li>
+              <li><i class="fas fa-check-circle"></i> CRM Integration & Customization</li>
+              <li><i class="fas fa-check-circle"></i> Business Process Optimization</li>
+              <li><i class="fas fa-check-circle"></i> API Integration</li>
+              <li><i class="fas fa-check-circle"></i> Serverless Architecture</li>
+            </ul>
+            <div class="about-ctas">
+              <a href="#projects" class="btn-primary">See My Work</a>
+              <a href="#contact" class="btn-ghost">Get In Touch</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SERVICES ===================== -->
+    <section id="services" class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">What I Do</div>
+          <h2 class="section-title">Services I <span class="gradient-text">Offer</span></h2>
+          <p class="section-desc"><em class="lora-italic">End-to-end automation solutions</em> tailored to your business
+            needs</p>
+        </div>
+        <div class="services-grid">
+          <div class="service-card glass-card">
+            <div class="service-icon">
+              <i class="fas fa-brain"></i>
+            </div>
+            <h3>AI Agent Development</h3>
+            <p>Custom AI agents that think, decide, and act — automating complex multi-step tasks with intelligence.</p>
+            <ul class="service-features">
+              <li>OpenAI / Claude Integration</li>
+              <li>Memory & Context Management</li>
+              <li>Tool-calling Pipelines</li>
+            </ul>
+          </div>
+          <div class="service-card glass-card">
+            <div class="service-icon">
+              <i class="fas fa-sitemap"></i>
+            </div>
+            <h3>Workflow Automation</h3>
+            <p>Build powerful automated pipelines using n8n, Make.com, and Zapier to eliminate manual work.</p>
+            <ul class="service-features">
+              <li>n8n Self-hosted Workflows</li>
+              <li>Make.com Scenarios</li>
+              <li>Zapier Automations</li>
+            </ul>
+          </div>
+          <div class="service-card glass-card">
+            <div class="service-icon">
+              <i class="fas fa-database"></i>
+            </div>
+            <h3>CRM Integration</h3>
+            <p>Seamlessly connect your CRM to every tool in your stack, ensuring data flows where it's needed.</p>
+            <ul class="service-features">
+              <li>GoHighLevel Setup</li>
+              <li>HubSpot Automation</li>
+              <li>Custom CRM Workflows</li>
+            </ul>
+          </div>
+          <div class="service-card glass-card">
+            <div class="service-icon">
+              <i class="fas fa-comments"></i>
+            </div>
+            <h3>AI Chatbot Development</h3>
+            <p>Conversational AI chatbots for Facebook, WhatsApp, and websites that engage and convert.</p>
+            <ul class="service-features">
+              <li>FB Messenger Bots</li>
+              <li>WhatsApp Automation</li>
+              <li>Lead Qualification Bots</li>
+            </ul>
+          </div>
+          <div class="service-card glass-card">
+            <div class="service-icon">
+              <i class="fas fa-plug"></i>
+            </div>
+            <h3>API Integration</h3>
+            <p>Connect any app to any system with custom API integrations and webhook-driven architectures.</p>
+            <ul class="service-features">
+              <li>REST & GraphQL APIs</li>
+              <li>Webhook Management</li>
+              <li>Third-party Connectors</li>
+            </ul>
+          </div>
+          <div class="service-card glass-card">
+            <div class="service-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Business Process Optimization</h3>
+            <p>Audit, redesign, and automate your core business processes for maximum efficiency.</p>
+            <ul class="service-features">
+              <li>Process Mapping</li>
+              <li>Bottleneck Analysis</li>
+              <li>ROI-driven Automation</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PROJECTS ===================== -->
+    <section id="projects" class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Portfolio</div>
+          <h2 class="section-title">Featured <span class="gradient-text">Projects</span></h2>
+          <p class="section-desc">A selection of AI-powered automation and integration solutions</p>
+        </div>
+        <div class="project-filters">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="n8n">n8n</button>
+          <button class="filter-btn" data-filter="make">Make.com</button>
+          <button class="filter-btn" data-filter="zapier">Zapier</button>
+          <button class="filter-btn" data-filter="ghl">GoHighLevel</button>
+        </div>
+        <div class="projects-grid" id="projectsGrid">
+          <!-- Project cards injected by JS -->
+        </div>
+        <div class="projects-cta">
+          <a href="projects.html" class="btn-outline">View All Projects <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Project Modal -->
+    <div class="modal-overlay" id="projectModal">
+      <div class="modal-box glass-card">
+        <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+        <div id="modalContent"></div>
+      </div>
+    </div>
+
+    <!-- ===================== TESTIMONIALS ===================== -->
+    <section id="testimonials" class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Social Proof</div>
+          <h2 class="section-title">What Clients <span class="gradient-text">Say</span></h2>
+          <p class="section-desc"><em class="lora-italic">Real results from real businesses</em> I've helped automate
+          </p>
+        </div>
+        <div class="testimonials-track-wrap">
+          <div class="testimonials-track" id="testimonialsTrack">
+            <!-- Testimonials injected by JS -->
+          </div>
+        </div>
+        <div class="testimonials-dots" id="testimonialsDots"></div>
+      </div>
+    </section>
+
+    <!-- ===================== BOOK A CALL ===================== -->
+    <section id="book-call" class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Let's Talk</div>
+          <h2 class="section-title">Ready to Put Your Growth<br><span class="gradient-text serif-italic-heading">on
+              Autopilot?</span></h2>
+          <p class="section-desc">Book your <em class="lora-italic">free 30-minute strategy call</em> and walk away with
+            a clear automation plan for GoHighLevel, n8n, Make and Zapier — sign off, and I'll build it for you.</p>
+        </div>
+        <div class="book-call-wrap">
+          <div class="book-call-info glass-card">
+            <h3>What to Expect</h3>
+            <ul class="expect-list">
+              <li><i class="fas fa-clock"></i> 30-minute discovery call</li>
+              <li><i class="fas fa-lightbulb"></i> Custom automation roadmap</li>
+              <li><i class="fas fa-dollar-sign"></i> ROI estimation for your business</li>
+              <li><i class="fas fa-tools"></i> Tool recommendations</li>
+              <li><i class="fas fa-handshake"></i> No obligation, 100% free</li>
+            </ul>
+            <div class="book-social">
+              <a href="https://wa.me/639954470799" target="_blank" class="social-link"><i
+                  class="fab fa-whatsapp"></i></a>
+              <a href="https://linkedin.com" target="_blank" class="social-link"><i class="fab fa-linkedin"></i></a>
+              <a href="mailto:dflowautomation@gmail.com" class="social-link"><i class="fas fa-envelope"></i></a>
+            </div>
+          </div>
+
+          <div class="book-call-form glass-card">
+            <!-- ── EmailJS SDK (free) ── -->
+            <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+            <form id="bookCallForm" novalidate>
+
+              <!-- ── FORM HEADER ── -->
+              <div class="bcf-header">
+                <div class="bcf-logo"><i class="fas fa-robot"></i></div>
+                <div>
+                  <h3 class="bcf-title">Book A Strategy Call</h3>
+                  <div class="bcf-duration"><i class="far fa-clock"></i> 30 min</div>
+                </div>
+              </div>
+              <p class="bcf-intro">Answer a few quick questions so we can map your tools, workflows, and ideas — then
+                design an AI-powered system that makes your business actually work.</p>
+
+              <!-- SECTION 1 — PERSONAL INFO -->
+              <div class="bcf-section">
+                <div class="bcf-section-label">PERSONAL INFO:</div>
+                <div class="form-group">
+                  <label for="bc-name">Full Name <span class="req">*</span></label>
+                  <input type="text" id="bc-name" placeholder="Enter your full name" required />
+                  <span class="field-err" id="err-bc-name"></span>
+                </div>
+                <div class="form-group">
+                  <label for="bc-phone">Phone <span class="req">*</span></label>
+                  <div class="input-icon-wrap">
+                    <i class="fas fa-phone input-icon"></i>
+                    <input type="tel" id="bc-phone" placeholder="+1 (555) 000-0000" required />
+                  </div>
+                  <span class="field-err" id="err-bc-phone"></span>
+                </div>
+                <div class="form-group">
+                  <label for="bc-email">Email <span class="req">*</span></label>
+                  <div class="input-icon-wrap">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" id="bc-email" placeholder="your@email.com" required />
+                  </div>
+                  <span class="field-err" id="err-bc-email"></span>
+                </div>
+              </div>
+
+              <!-- SECTION 2 — BUSINESS CONTEXT -->
+              <div class="bcf-section">
+                <div class="bcf-section-label">BUSINESS CONTEXT:</div>
+                <div class="form-group">
+                  <label for="bc-biz-desc">What does your business do, and who are your customers? <span
+                      class="req">*</span></label>
+                  <textarea id="bc-biz-desc" rows="4" placeholder="Type your message here" required></textarea>
+                  <span class="field-err" id="err-bc-biz-desc"></span>
+                </div>
+                <div class="form-group">
+                  <label for="bc-revenue">What's your approximate monthly revenue or team size? <span
+                      class="req">*</span></label>
+                  <select id="bc-revenue" required>
+                    <option value=""></option>
+                    <option>Pre-revenue / just starting</option>
+                    <option>Under $5K/mo</option>
+                    <option>$5K–$20K/mo</option>
+                    <option>$20K–$50K/mo</option>
+                    <option>$50K–$100K/mo</option>
+                    <option>$100K+/mo</option>
+                    <option>Team of 1–3 people</option>
+                    <option>Team of 4–10 people</option>
+                    <option>Team of 11–50 people</option>
+                    <option>Team of 50+ people</option>
+                  </select>
+                  <span class="field-err" id="err-bc-revenue"></span>
+                </div>
+                <div class="form-group">
+                  <label for="bc-role">What's your role in the business?</label>
+                  <select id="bc-role">
+                    <option value=""></option>
+                    <option>Owner / Founder / CEO</option>
+                    <option>Operations Manager / COO</option>
+                    <option>Marketing Director / CMO</option>
+                    <option>Sales Manager</option>
+                    <option>IT / Tech Lead</option>
+                    <option>Virtual Assistant / OBM</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- SECTION 3 — THE PROBLEM YOU WANT TO SOLVE -->
+              <div class="bcf-section">
+                <div class="bcf-section-label">THE PROBLEM YOU WANT TO SOLVE:</div>
+                <div class="form-group">
+                  <label for="bc-top-process">What's the #1 process or task you're trying to automate right now? <span
+                      class="req">*</span></label>
+                  <textarea id="bc-top-process" rows="3" placeholder="project description" required></textarea>
+                  <span class="field-err" id="err-bc-top-process"></span>
+                </div>
+                <div class="form-group">
+                  <label for="bc-process-steps">Walk us through how that process works today, step by step.</label>
+                  <textarea id="bc-process-steps" rows="4" placeholder="Objectives and goals"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="bc-hours-spent">How many hours per week does your team currently spend on this
+                    manually?</label>
+                  <textarea id="bc-hours-spent" rows="3" placeholder="Objectives and goals"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="bc-cost">What is this costing you — lost leads, slow response times, errors,
+                    burnout?</label>
+                  <textarea id="bc-cost" rows="4" placeholder="Type your message here"></textarea>
+                </div>
+              </div>
+
+              <!-- SECTION 4 — CURRENT SYSTEMS -->
+              <div class="bcf-section">
+                <div class="bcf-section-label">CURRENT SYSTEMS:</div>
+                <div class="form-group">
+                  <label>Which tools do you currently use?</label>
+                  <div class="check-list">
+                    <label class="check-row"><input type="checkbox" name="tools"
+                        value="CRM/GHL" /><span>CRM/GHL</span></label>
+                    <label class="check-row"><input type="checkbox" name="tools" value="email marketing" /><span>email
+                        marketing</span></label>
+                    <label class="check-row"><input type="checkbox" name="tools"
+                        value="calendar/booking" /><span>calendar/booking</span></label>
+                    <label class="check-row"><input type="checkbox" name="tools"
+                        value="payments/Stripe" /><span>payments/Stripe</span></label>
+                    <label class="check-row"><input type="checkbox" name="tools"
+                        value="spreadsheet" /><span>spreadsheet</span></label>
+                    <label class="check-row"><input type="checkbox" name="tools"
+                        value="project management" /><span>project management</span></label>
+                    <label class="check-row"><input type="checkbox" name="tools"
+                        value="e-commerce" /><span>e-commerce</span></label>
+                    <label class="check-row"><input type="checkbox" name="tools"
+                        value="other" /><span>other</span></label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Do these tools talk to each other automatically today, or is it manual copy-paste?</label>
+                  <div class="radio-list">
+                    <label class="radio-row"><input type="radio" name="connectivity" value="fully manual" /><span>fully
+                        manual</span></label>
+                    <label class="radio-row"><input type="radio" name="connectivity"
+                        value="partly connected" /><span>partly connected</span></label>
+                    <label class="radio-row"><input type="radio" name="connectivity"
+                        value="mostly automated" /><span>mostly automated</span></label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Do you already use any automation platforms?</label>
+                  <div class="check-list">
+                    <label class="check-row"><input type="checkbox" name="platforms"
+                        value="Zapier" /><span>Zapier</span></label>
+                    <label class="check-row"><input type="checkbox" name="platforms"
+                        value="Make" /><span>Make</span></label>
+                    <label class="check-row"><input type="checkbox" name="platforms"
+                        value="n8n" /><span>n8n</span></label>
+                    <label class="check-row"><input type="checkbox" name="platforms" value="GHL workflows" /><span>GHL
+                        workflows</span></label>
+                    <label class="check-row"><input type="checkbox" name="platforms" value="none yet" /><span>none
+                        yet</span></label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="bc-volume">What volume are we dealing with?</label>
+                  <input type="text" id="bc-volume" placeholder="Enter your text" />
+                </div>
+                <div class="form-group">
+                  <label for="bc-compliance">Any data-sensitivity or compliance requirements? (healthcare, finance,
+                    client data)</label>
+                  <input type="text" id="bc-compliance" placeholder="Enter your text" />
+                </div>
+              </div>
+
+              <!-- SECTION 5 — VISION AND BUDGET -->
+              <div class="bcf-section">
+                <div class="bcf-section-label">VISION AND BUDGET:</div>
+                <div class="form-group">
+                  <label for="bc-success">What would success look like 90 days from now?</label>
+                  <textarea id="bc-success" rows="4" placeholder="Type your message here"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="bc-tried">Have you tried to automate this before? What happened?</label>
+                  <textarea id="bc-tried" rows="4" placeholder="Type your message here"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="bc-budget">What budget range are you working with for this project? <span
+                      class="req">*</span></label>
+                  <select id="bc-budget" required>
+                    <option value=""></option>
+                    <option>Under $500</option>
+                    <option>$500–$1,500</option>
+                    <option>$1,500–$3,000</option>
+                    <option>$3,000–$5,000</option>
+                    <option>$5,000–$10,000</option>
+                    <option>$10,000+</option>
+                    <option>Not sure yet — let's talk</option>
+                  </select>
+                  <span class="field-err" id="err-bc-budget"></span>
+                </div>
+                <div class="form-group">
+                  <label for="bc-timeline">How soon do you want this live?</label>
+                  <select id="bc-timeline">
+                    <option value=""></option>
+                    <option>ASAP — yesterday</option>
+                    <option>Within 2 weeks</option>
+                    <option>Within 1 month</option>
+                    <option>1–3 months</option>
+                    <option>Just exploring for now</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- SECTION 6 — ADDITIONAL INFO -->
+              <div class="bcf-section">
+                <div class="bcf-section-label">ADDITIONAL INFO:</div>
+                <div class="form-group">
+                  <label for="bc-referral">How did you hear about DFlowAutomation?</label>
+                  <select id="bc-referral">
+                    <option value=""></option>
+                    <option>Facebook / Meta</option>
+                    <option>LinkedIn</option>
+                    <option>YouTube</option>
+                    <option>Google Search</option>
+                    <option>Referral / Word of mouth</option>
+                    <option>Upwork / Fiverr</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="bc-notes">Anything else you'd like Don to know before the call?</label>
+                  <textarea id="bc-notes" rows="4" placeholder="Type your message here"></textarea>
+                </div>
+              </div>
+
+              <!-- SUBMIT -->
+              <div class="bcf-submit-wrap">
+                <button type="submit" class="btn-primary btn-full" id="bcSubmitBtn">
+                  <i class="fas fa-calendar-check"></i> Submit &amp; Book My Strategy Call
+                </button>
+                <p class="bcf-privacy"><i class="fas fa-lock"></i> Your info is 100% private and never shared.</p>
+              </div>
+
+            </form>
+
+            <!-- SUCCESS STATE + CALENDAR -->
+            <div class="bcf-success" id="bcfSuccess" style="display:none;">
+              <div class="success-checkmark">
+                <div class="check-circle"><i class="fas fa-check"></i></div>
+              </div>
+              <h3>You're All Set! 🎉</h3>
+              <p class="bcf-success-sub">Thanks <strong id="bcfSuccessName"></strong>! A confirmation email has been
+                sent to <strong id="bcfSuccessEmail"></strong>. Now pick a time for your free 30-minute strategy call
+                below.</p>
+
+              <!-- Calendar Widget -->
+              <div class="bcf-cal-wrap">
+                <div class="bcf-cal-header">
+                  <i class="fas fa-calendar-alt"></i>
+                  <span>Select a Date &amp; Time</span>
+                </div>
+                <div class="cal-widget">
+                  <!-- Month navigation -->
+                  <div class="cal-month-nav">
+                    <button class="cal-nav-btn" id="calPrev"><i class="fas fa-chevron-left"></i></button>
+                    <span class="cal-month-title" id="calMonthLabel"></span>
+                    <button class="cal-nav-btn" id="calNext"><i class="fas fa-chevron-right"></i></button>
+                  </div>
+                  <!-- Weekday headers -->
+                  <div class="cal-weekdays">
+                    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                  </div>
+                  <!-- Day grid -->
+                  <div class="cal-days" id="calGrid"></div>
+                  <!-- Time slots (shown after date selection) -->
+                  <div class="cal-times" id="calTimes" style="display:none;">
+                    <p class="cal-times-label">Available slots on <strong id="calDateLabel"></strong></p>
+                    <div class="cal-slots" id="calSlots"></div>
+                  </div>
+                  <!-- Booking confirm state -->
+                  <div class="cal-booked" id="calBooked" style="display:none;">
+                    <div class="cal-booked-icon"><i class="fas fa-calendar-check"></i></div>
+                    <h4>Call Booked!</h4>
+                    <p id="calBookedMsg"></p>
+                    <div class="cal-meet-box" id="calMeetBox"
+                      style="margin: 16px 0; padding: 12px; background: rgba(168,85,247,0.06); border: 1px solid var(--clr-border); border-radius: var(--radius); text-align: center;">
+                      <span
+                        style="font-size: 0.72rem; color: var(--clr-text-dim); text-transform: uppercase; font-family: var(--font-mono); letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Meeting
+                        Location (Google Meet)</span>
+                      <a href="#" id="calMeetLink" target="_blank"
+                        style="color: var(--clr-accent); font-weight: 700; text-decoration: none; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-video"></i> Generating Google Meet link...
+                      </a>
+                    </div>
+                    <p class="cal-booked-note"><i class="fas fa-envelope"></i> A Google Calendar invite has been sent to
+                      your email. Don will confirm 30 minutes before the call.</p>
+                    <div class="cal-booked-actions">
+                      <button class="btn-ghost" id="calAddToGcal"><i class="fab fa-google"></i> Add to Google
+                        Calendar</button>
+                      <button class="btn-ghost" id="bcfReset"><i class="fas fa-redo"></i> Fill another form</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FAQ ===================== -->
+    <section id="faq" class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Got Questions?</div>
+          <h2 class="section-title">Frequently Asked <span class="gradient-text">Questions</span></h2>
+          <p class="section-desc">Everything you need to know about working with me</p>
+        </div>
+        <div class="faq-grid">
+          <div class="faq-item glass-card" data-open="false">
+            <button class="faq-question">
+              <span>What tools do you use for automation?</span>
+              <i class="fas fa-plus faq-icon"></i>
+            </button>
+            <div class="faq-answer">
+              <p>I primarily work with <strong>n8n</strong> (self-hosted), <strong>Make.com</strong>, and
+                <strong>Zapier</strong> for workflow automation. For AI agents, I use the OpenAI and Anthropic APIs,
+                along with frameworks like LangChain. For CRM, I specialize in GoHighLevel, HubSpot, and custom CRM
+                builds.</p>
+            </div>
+          </div>
+          <div class="faq-item glass-card" data-open="false">
+            <button class="faq-question">
+              <span>How long does a typical project take?</span>
+              <i class="fas fa-plus faq-icon"></i>
+            </button>
+            <div class="faq-answer">
+              <p>Simple automations can be completed in <strong>3–7 days</strong>. More complex projects like full AI
+                agent systems or CRM overhauls typically take <strong>2–6 weeks</strong>, depending on scope and
+                integrations required.</p>
+            </div>
+          </div>
+          <div class="faq-item glass-card" data-open="false">
+            <button class="faq-question">
+              <span>Do I need technical knowledge to use your automations?</span>
+              <i class="fas fa-plus faq-icon"></i>
+            </button>
+            <div class="faq-answer">
+              <p>No! That's exactly what I'm here for. I design automations that run seamlessly in the background. I
+                provide thorough documentation and training so your team can manage day-to-day operations without any
+                coding knowledge.</p>
+            </div>
+          </div>
+          <div class="faq-item glass-card" data-open="false">
+            <button class="faq-question">
+              <span>What's the ROI of automation?</span>
+              <i class="fas fa-plus faq-icon"></i>
+            </button>
+            <div class="faq-answer">
+              <p>Most clients see ROI within the <strong>first 30–60 days</strong>. Typical results include 10–40
+                hours/week saved, 30–70% reduction in manual errors, and 2–5x faster lead response times. We'll estimate
+                your specific ROI during the free strategy call.</p>
+            </div>
+          </div>
+          <div class="faq-item glass-card" data-open="false">
+            <button class="faq-question">
+              <span>Do you offer ongoing support after delivery?</span>
+              <i class="fas fa-plus faq-icon"></i>
+            </button>
+            <div class="faq-answer">
+              <p>Yes! I offer <strong>monthly retainer plans</strong> that include maintenance, monitoring, updates, and
+                priority support. I also offer one-time support packages for smaller needs.</p>
+            </div>
+          </div>
+          <div class="faq-item glass-card" data-open="false">
+            <button class="faq-question">
+              <span>How do you price your services?</span>
+              <i class="fas fa-plus faq-icon"></i>
+            </button>
+            <div class="faq-answer">
+              <p>Pricing is based on the scope and complexity of the project. Simple automations start at
+                <strong>$300</strong>, while full AI agent systems or complete CRM builds range from
+                <strong>$1,000–$10,000+</strong>. Book a free call and I'll give you a transparent quote.</p>
+            </div>
+          </div>
+          <div class="faq-item glass-card" data-open="false">
+            <button class="faq-question">
+              <span>Can you automate my specific tool or platform?</span>
+              <i class="fas fa-plus faq-icon"></i>
+            </button>
+            <div class="faq-answer">
+              <p>Almost certainly, yes. If a platform has an API or webhook support, I can integrate it. I've worked
+                with 50+ different tools including Slack, Notion, Airtable, Google Workspace, Shopify, WordPress, and
+                many more.</p>
+            </div>
+          </div>
+          <div class="faq-item glass-card" data-open="false">
+            <button class="faq-question">
+              <span>Is my data secure when using automation?</span>
+              <i class="fas fa-plus faq-icon"></i>
+            </button>
+            <div class="faq-answer">
+              <p>Data security is a top priority. I follow best practices including <strong>encrypted
+                  connections</strong>, minimal data retention, proper API key management, and n8n self-hosting options
+                so your data never leaves your server.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CONTACT ===================== -->
+    <section id="contact" class="section reveal">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Get In Touch</div>
+          <h2 class="section-title">Let's <span class="gradient-text">Work Together</span></h2>
+          <p class="section-desc"><em class="lora-italic">Ready to automate your business?</em> Let's talk.</p>
+        </div>
+        <div class="contact-grid">
+          <div class="contact-info glass-card">
+            <h3>Reach Out Directly</h3>
+            <div class="contact-item">
+              <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+              <div>
+                <span class="contact-label">Email</span>
+                <a href="mailto:dflowautomation@gmail.com">dflowautomation@gmail.com</a>
+              </div>
+            </div>
+
+            <div class="contact-item">
+              <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
+              <div>
+                <span class="contact-label">WhatsApp</span>
+                <a href="https://wa.me/639954470799" target="_blank">+63 995 447 0799</a>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon"><i class="fab fa-linkedin"></i></div>
+              <div>
+                <span class="contact-label">LinkedIn</span>
+                <a href="https://linkedin.com" target="_blank">Don Sufrir</a>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+              <div>
+                <span class="contact-label">Location</span>
+                <span>Philippines 🇵🇭 (Remote Worldwide)</span>
+              </div>
+            </div>
+          </div>
+          <form class="contact-form glass-card" id="contactForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="c-name">Name *</label>
+                <input type="text" id="c-name" placeholder="Your name" required />
+              </div>
+              <div class="form-group">
+                <label for="c-email">Email *</label>
+                <input type="email" id="c-email" placeholder="your@email.com" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="c-subject">Subject</label>
+              <input type="text" id="c-subject" placeholder="What's this about?" />
+            </div>
+            <div class="form-group">
+              <label for="c-message">Message *</label>
+              <textarea id="c-message" rows="5" placeholder="Tell me about your project..." required></textarea>
+            </div>
+            <button type="submit" class="btn-primary btn-full">
+              <i class="fas fa-paper-plane"></i> Send Message
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer id="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="logo">
+            <span class="logo-d">D</span><span class="logo-flow">FlowAutomation</span>
+          </a>
+          <p><em class="lora-italic">Smart AI workflows</em> that scale your business. Built by an automation specialist
+            who's <em class="lora-italic">obsessed with efficiency.</em></p>
+          <div class="footer-socials">
+            <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="footer-links">
+          <h4>Navigation</h4>
+          <a href="#about">About</a>
+          <a href="#services">Services</a>
+          <a href="#projects">Projects</a>
+          <a href="#testimonials">Testimonials</a>
+          <a href="#faq">FAQ</a>
+          <a href="#contact">Contact</a>
+        </div>
+        <div class="footer-links">
+          <h4>Services</h4>
+          <a href="#services">AI Agent Development</a>
+          <a href="#services">Workflow Automation</a>
+          <a href="#services">CRM Integration</a>
+          <a href="#services">API Integration</a>
+          <a href="#services">Chatbot Development</a>
+        </div>
+        <div class="footer-links">
+          <h4>Tools</h4>
+          <a href="#projects">n8n</a>
+          <a href="#projects">Make.com</a>
+          <a href="#projects">Zapier</a>
+          <a href="#projects">OpenAI</a>
+          <a href="#projects">GoHighLevel</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 DFlowAutomation. All rights reserved. Built by Epifanio "Don" Sufrir.</p>
+        <p>Designed with <i class="fas fa-heart" style="color:#a855f7"></i> and AI</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== CHATBOT ===================== -->
+  <div class="chatbot-bubble" id="chatbotBubble" title="Chat with Don's AI">
+    <div class="robot-3d-scene">
+      <!-- Floating Speech Bubble from the reference image -->
+      <div class="robot-speech-bubble">
+        <span class="bubble-dot"></span>
+        <span class="bubble-dot"></span>
+        <span class="bubble-dot"></span>
+      </div>
+
+      <div class="robot-3d-model" id="robot3dModel">
+        <!-- Antenna -->
+        <div class="robot-antenna">
+          <div class="antenna-stem"></div>
+          <div class="antenna-bulb"></div>
+        </div>
+
+        <div class="robot-3d-head">
+          <div class="robot-head-base">
+            <!-- Ears (Headphones) -->
+            <div class="robot-ear left">
+              <div class="ear-ring"></div>
+              <div class="ear-core"></div>
+            </div>
+            <div class="robot-ear right">
+              <div class="ear-ring"></div>
+              <div class="ear-core"></div>
+            </div>
+
+            <!-- Face Panel -->
+            <div class="robot-face-panel">
+              <div class="face-inner">
+                <!-- Large Round Eyes -->
+                <div class="robot-eye left">
+                  <div class="eye-ring">
+                    <div class="eye-pupil"></div>
+                  </div>
+                </div>
+                <div class="robot-eye right">
+                  <div class="eye-ring">
+                    <div class="eye-pupil"></div>
+                  </div>
+                </div>
+                <!-- Happy Open Mouth -->
+                <div class="robot-mouth">
+                  <div class="mouth-tooth"></div>
+                  <div class="mouth-tongue"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="robot-3d-body-wrap">
+          <!-- Ribbed Neck -->
+          <div class="robot-neck">
+            <span></span><span></span><span></span>
+          </div>
+          <!-- Torso -->
+          <div class="robot-body">
+            <div class="body-grille"></div>
+            <div class="body-button"></div>
+          </div>
+          <!-- Shoulder joints -->
+          <div class="robot-shoulder left"></div>
+          <div class="robot-shoulder right"></div>
+        </div>
+      </div>
+    </div>
+    <span class="chatbot-ping"></span>
+  </div>
+  <div class="chatbot-window glass-card" id="chatbotWindow">
+    <div class="chatbot-header">
+      <div class="chatbot-avatar">
+        <div class="robot-3d-scene header-scene">
+          <div class="robot-3d-model" id="robot3dModelHeader">
+            <div class="robot-antenna">
+              <div class="antenna-stem"></div>
+              <div class="antenna-bulb"></div>
+            </div>
+            <div class="robot-3d-head">
+              <div class="robot-head-base">
+                <div class="robot-ear left">
+                  <div class="ear-ring"></div>
+                  <div class="ear-core"></div>
+                </div>
+                <div class="robot-ear right">
+                  <div class="ear-ring"></div>
+                  <div class="ear-core"></div>
+                </div>
+                <div class="robot-face-panel">
+                  <div class="face-inner">
+                    <div class="robot-eye left">
+                      <div class="eye-ring">
+                        <div class="eye-pupil"></div>
+                      </div>
+                    </div>
+                    <div class="robot-eye right">
+                      <div class="eye-ring">
+                        <div class="eye-pupil"></div>
+                      </div>
+                    </div>
+                    <div class="robot-mouth">
+                      <div class="mouth-tooth"></div>
+                      <div class="mouth-tongue"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="robot-3d-body-wrap">
+              <div class="robot-neck">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="robot-body">
+                <div class="body-grille"></div>
+                <div class="body-button"></div>
+              </div>
+              <div class="robot-shoulder left"></div>
+              <div class="robot-shoulder right"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chatbot-info">
+        <span class="chatbot-name">Don's AI Assistant</span>
+        <span class="chatbot-status"><span class="status-dot"></span> Online</span>
+      </div>
+      <button class="chatbot-close" id="chatbotClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="chatbot-messages" id="chatbotMessages">
+      <div class="chat-msg bot">
+        <div class="chat-bubble">
+          👋 Hi! I'm Don's AI assistant. I can answer questions about his services, pricing, or help you book a call.
+          What would you like to know?
+        </div>
+      </div>
+    </div>
+    <div class="chatbot-quick-replies" id="quickReplies">
+      <button class="quick-reply" data-msg="What services do you offer?">Services</button>
+      <button class="quick-reply" data-msg="How much does it cost?">Pricing</button>
+      <button class="quick-reply" data-msg="How do I get started?">Get Started</button>
+      <button class="quick-reply" data-msg="What tools do you use?">Tools</button>
+    </div>
+    <div class="chatbot-input-wrap">
+      <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Type your question..." />
+      <button class="chatbot-send" id="chatbotSend"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <!-- ===================== COMMUNITY CHAT ===================== -->
+  <div class="community-chat-window glass-card" id="communityChatWindow">
+    <div class="cc-header">
+      <div class="cc-header-left">
+        <span class="cc-title">Community Chat</span>
+        <div class="cc-viewing-pill">
+          <span class="indicator-dot"></span>
+          <span id="ccViewingCount">1</span> viewing
+        </div>
+      </div>
+      <button class="cc-close" id="ccCloseBtn">&times;</button>
+    </div>
+
+    <div class="cc-marquee">
+      visitors online from US, PH, IN, CA, UK
+    </div>
+
+    <div class="cc-messages" id="ccMessages">
+      <div class="cc-status-log">Connected to #general. Welcome to the Community Chat!</div>
+    </div>
+
+    <form class="cc-input-area" id="ccInputForm">
+      <input type="text" id="ccMessageInput" placeholder="Message #general" required autocomplete="off" />
+      <button type="submit" class="cc-send-btn">Send</button>
+    </form>
+  </div>
+
+  <!-- Back to Top -->
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

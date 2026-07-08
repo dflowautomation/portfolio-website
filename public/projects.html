@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projects Archive | DFlowAutomation – Epifanio "Don" Sufrir</title>
+  <meta name="description"
+    content="Detailed case studies and portfolio of AI agent development, workflow integrations, and CRM funnels built by Don Sufrir." />
+  <meta name="keywords"
+    content="AI projects, workflow automation portfolio, n8n examples, Make.com integration, GoHighLevel setup" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Manrope:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@1,400;1,600;1,700&family=Lora:ital,wght@1,400;1,500;1,600&display=swap"
+    rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- Interactive Canvas Background -->
+  <canvas id="bgCanvas"></canvas>
+
+  <!-- ===================== NAVBAR ===================== -->
+  <header id="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span class="logo-d">D</span><span class="logo-flow">FlowAutomation</span>
+      </a>
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html#about">About</a>
+        <a href="index.html#services">Services</a>
+        <a href="index.html#projects" class="active">Projects</a>
+        <a href="index.html#testimonials">Testimonials</a>
+        <a href="index.html#faq">FAQ</a>
+        <a href="index.html#contact">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="online-indicator-pill">
+          <span class="indicator-dot"></span>
+          <span id="onlineCount">1</span> online
+        </div>
+        <button class="btn-chat-toggle" id="navbarChatBtn">Chat</button>
+        <a href="index.html#book-call" class="btn-primary nav-cta">Book a Call</a>
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html#about" class="mobile-link">About</a>
+    <a href="index.html#services" class="mobile-link">Services</a>
+    <a href="index.html#projects" class="mobile-link">Projects</a>
+    <a href="index.html#testimonials" class="mobile-link">Testimonials</a>
+    <a href="index.html#faq" class="mobile-link">FAQ</a>
+    <a href="index.html#contact" class="mobile-link">Contact</a>
+    <div class="mobile-chat-row">
+      <div class="online-indicator-pill">
+        <span class="indicator-dot"></span>
+        <span id="onlineCountMobile">1</span> online
+      </div>
+      <button class="btn-chat-toggle" id="mobileChatBtn">Chat</button>
+    </div>
+    <a href="index.html#book-call" class="btn-primary mobile-link">Book a Call</a>
+  </div>
+
+  <main style="padding-top: 120px;">
+    <!-- ===================== PROJECTS ARCHIVE HEADER ===================== -->
+    <section class="section" style="padding-bottom: 20px;">
+      <div class="container">
+        <div class="section-header" style="margin-bottom: 30px;">
+          <div class="section-label">Case Studies</div>
+          <h1 class="section-title">Projects <span class="gradient-text">Archive</span></h1>
+          <p class="section-desc"><em class="lora-italic">A dedicated catalog of my automation, integration, and CRM
+              solutions.</em> (Filter and click any card to view features and workflows.)</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FEATURED PROJECTS GRID ===================== -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="project-filters">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="n8n">n8n</button>
+          <button class="filter-btn" data-filter="make">Make.com</button>
+          <button class="filter-btn" data-filter="zapier">Zapier</button>
+          <button class="filter-btn" data-filter="ghl">GoHighLevel</button>
+        </div>
+        <div class="projects-grid" id="projectsGrid">
+          <!-- Project cards injected by JS -->
+        </div>
+        <div style="text-align: center; margin-top: 48px;">
+          <a href="index.html" class="btn-ghost"><i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to
+            Home</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Project Modal -->
+    <div class="modal-overlay" id="projectModal">
+      <div class="modal-box glass-card">
+        <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+        <div id="modalContent"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer id="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="logo">
+            <span class="logo-d">D</span><span class="logo-flow">FlowAutomation</span>
+          </a>
+          <p><em class="lora-italic">Smart AI workflows</em> that scale your business. Built by an automation specialist
+            who's <em class="lora-italic">obsessed with efficiency.</em></p>
+          <div class="footer-socials">
+            <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="footer-links">
+          <h4>Navigation</h4>
+          <a href="index.html#about">About</a>
+          <a href="index.html#services">Services</a>
+          <a href="index.html#projects">Projects</a>
+          <a href="index.html#testimonials">Testimonials</a>
+          <a href="index.html#faq">FAQ</a>
+          <a href="index.html#contact">Contact</a>
+        </div>
+        <div class="footer-links">
+          <h4>Services</h4>
+          <a href="index.html#services">AI Agent Development</a>
+          <a href="index.html#services">Workflow Automation</a>
+          <a href="index.html#services">CRM Integration</a>
+          <a href="index.html#services">API Integration</a>
+          <a href="index.html#services">Chatbot Development</a>
+        </div>
+        <div class="footer-links">
+          <h4>Tools</h4>
+          <a href="index.html#projects">n8n</a>
+          <a href="index.html#projects">Make.com</a>
+          <a href="index.html#projects">Zapier</a>
+          <a href="index.html#projects">OpenAI</a>
+          <a href="index.html#projects">GoHighLevel</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 DFlowAutomation. All rights reserved. Built by Epifanio "Don" Sufrir.</p>
+        <p>Designed with <i class="fas fa-heart" style="color:#a855f7"></i> and AI</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== COMMUNITY CHAT ===================== -->
+  <div class="community-chat-window glass-card" id="communityChatWindow">
+    <div class="cc-header">
+      <div class="cc-header-left">
+        <span class="cc-title">Community Chat</span>
+        <div class="cc-viewing-pill">
+          <span class="indicator-dot"></span>
+          <span id="ccViewingCount">1</span> viewing
+        </div>
+      </div>
+      <button class="cc-close" id="ccCloseBtn">&times;</button>
+    </div>
+
+    <div class="cc-marquee">
+      visitors online from US, PH, IN, CA, UK
+    </div>
+
+    <div class="cc-messages" id="ccMessages">
+      <div class="cc-status-log">Connected to #general. Welcome to the Community Chat!</div>
+    </div>
+
+    <form class="cc-input-area" id="ccInputForm">
+      <input type="text" id="ccMessageInput" placeholder="Message #general" required autocomplete="off" />
+      <button type="submit" class="cc-send-btn">Send</button>
+    </form>
+  </div>
+
+  <!-- Back to Top -->
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
