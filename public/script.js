@@ -266,11 +266,7 @@ const PROJECTS = [
     solution: 'Built an n8n workflow utilizing the Google Gemini API to interpret buyer intent, answer FAQs instantly, and qualify prospects.',
     impact: 'Reduced response times to under 5 seconds, automated 90% of basic inquiries, and boosted qualified sales lead capture by 40%.',
     tools: ['n8n', 'Google Gemini API', 'FB Messenger API', 'Google Sheets'],
-    img: [
-      'images/n8n-project1.png',
-      'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=600&q=80',
-      'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=600&q=80'
-    ],
+    img: 'images/n8n-project1.png',
   },
   {
     id: 2,
@@ -311,11 +307,7 @@ const PROJECTS = [
     solution: 'An automated system was created to fetch attachments, rename them intelligently, upload to Google Drive, log information in Google Sheets, and notify users, ensuring a streamlined and organized process.',
     impact: 'The automation significantly reduced manual effort, minimized errors, and improved document organization. This resulted in quicker access to important files, enhancing overall operational efficiency and productivity for the client.',
     tools: ['Gmail API', 'Google Drive', 'Google Sheets', 'Gemini', 'Make.com'],
-    img: [
-      'images/make-project1.png',
-      'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&q=80',
-      'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&q=80'
-    ],
+    img: 'images/make-project1.png',
   },
   {
     id: 6,
@@ -369,11 +361,7 @@ const PROJECTS = [
     solution: 'Built a "Traffic Cop" automation in Zapier using Paths. It evaluates every incoming leads data availability (Email vs. Phone) and instantly routes them to the correct nurture sequence in either Klaviyo or Superchat.',
     impact: 'This ensured 100% of leads received immediate, channel-appropriate follow-up. It maximized Black Friday waitlist engagement by meeting customers on their preferred platform (Inbox vs. WhatsApp), significantly boosting open rates and potential revenue.',
     tools: ['Zapier', 'Klaviyo', 'Superchat', 'Perspective', 'Gmail', 'Whatsapp'],
-    img: [
-      'images/zapier-project 7-1.png',
-      'images/Superchat Automation-project 7-2.png',
-      'images/Klaviyo Automation-project 7-3.png',
-    ],
+    img: 'images/zapier-project 7-1.png',
   },
 
   // ================= GHL PROJECTS =================
