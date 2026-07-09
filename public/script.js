@@ -1552,14 +1552,42 @@ document.head.appendChild(style);
     }
   };
 
-  // Fluctuate Online Counters Realistically
-  const onlineCountEl = document.getElementById('onlineCount');
-  const onlineCountMobileEl = document.getElementById('onlineCountMobile');
-  const ccViewingCountEl = document.getElementById('ccViewingCount');
+  // Real-time simultaneous visitor counter via public room broker
+  (async function initRealtimePresence() {
+    try {
+      const Y = await import('https://esm.sh/yjs@13.6.10');
+      const { WebsocketProvider } = await import('https://esm.sh/y-websocket@1.5.0');
+      
+      const ydoc = new Y.Doc();
+      const provider = new WebsocketProvider(
+        'wss://demos.yjs.dev',
+        'dflowautomation-portfolio-presence-v1',
+        ydoc
+      );
 
-  if (onlineCountEl) onlineCountEl.textContent = '1';
-  if (onlineCountMobileEl) onlineCountMobileEl.textContent = '1';
-  if (ccViewingCountEl) ccViewingCountEl.textContent = '1';
+      provider.awareness.on('change', () => {
+        const count = provider.awareness.getStates().size;
+        const onlineCountEl = document.getElementById('onlineCount');
+        const onlineCountMobileEl = document.getElementById('onlineCountMobile');
+        const ccViewingCountEl = document.getElementById('ccViewingCount');
+        
+        if (onlineCountEl) onlineCountEl.textContent = count;
+        if (onlineCountMobileEl) onlineCountMobileEl.textContent = count;
+        if (ccViewingCountEl) ccViewingCountEl.textContent = count;
+      });
+
+      // Register local presence state
+      provider.awareness.setLocalStateField('user', { active: true });
+    } catch (err) {
+      console.warn('Realtime presence count setup failed. Falling back to 1.', err);
+      const onlineCountEl = document.getElementById('onlineCount');
+      const onlineCountMobileEl = document.getElementById('onlineCountMobile');
+      const ccViewingCountEl = document.getElementById('ccViewingCount');
+      if (onlineCountEl) onlineCountEl.textContent = '1';
+      if (onlineCountMobileEl) onlineCountMobileEl.textContent = '1';
+      if (ccViewingCountEl) ccViewingCountEl.textContent = '1';
+    }
+  })();
 
   // Active Visitor Geolocation marquee
   const marqueeEl = chatWindow.querySelector('.cc-marquee');
