@@ -2054,6 +2054,9 @@ body {
   .testimonial-card { flex: 0 0 calc(100% - 0px); }
 
   .modal-box { padding: 24px; }
+  .nav-container { flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+  .btn-chat-toggle, 
+  .nav-actions .btn-primary { padding: 6px 14px !important; font-size: 0.8rem !important; }
 }
 
 @media (max-width: 480px) {
@@ -2061,6 +2064,8 @@ body {
   .about-ctas { flex-direction: column; }
   .hero-stats { gap: 12px; }
   .stat-divider { height: 24px; }
+  .nav-container { justify-content: center !important; }
+  .nav-actions { margin-left: 0 !important; }
 }
 
 /* =============================================
