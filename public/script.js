@@ -659,7 +659,7 @@ const TESTIMONIALS = [
     title: 'Content Creator, AskMeAnything',
     text: '"DFlowAutomation built an incredible ChatGPT-style automation for my Messenger page! It’s fast, intelligent, and engages my audience like never before. The setup was smooth, fully customized to my content, and has boosted my interaction and productivity tremendously. Highly recommended!"',
     rating: 5,
-    avatar: 'images/ezekiel.jpg'
+    avatar: 'images/Ezekiel.jpg'
   },
 ];
 
