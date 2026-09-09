@@ -2412,6 +2412,28 @@ body {
   opacity: 0.25;
   cursor: not-allowed;
 }
+.cal-day.fully-booked {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  border-color: rgba(239, 68, 68, 0.25) !important;
+  color: var(--clr-text-dim) !important;
+  text-decoration: line-through;
+  pointer-events: none;
+}
+.cal-day.has-booking {
+  border-color: rgba(168, 85, 247, 0.4);
+  position: relative;
+}
+.cal-day.has-booking::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--clr-accent);
+}
 .cal-day.empty { cursor: default; }
 .cal-day.available {
   color: var(--clr-text);
@@ -2427,16 +2449,28 @@ body {
 .cal-times-label {
   font-size: 0.85rem;
   color: var(--clr-text-muted);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .cal-times-label strong { color: var(--clr-text); }
+.cal-policy-info {
+  font-size: 0.74rem;
+  color: var(--clr-text-dim);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  padding: 5px 10px;
+  border-radius: 6px;
+}
 .cal-slots {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 .cal-slot {
-  padding: 10px;
+  padding: 10px 6px;
   background: var(--clr-surface2);
   border: 1px solid var(--clr-border);
   border-radius: 8px;
@@ -2446,8 +2480,13 @@ body {
   color: var(--clr-text-muted);
   cursor: pointer;
   transition: all var(--trans);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
 }
-.cal-slot:hover {
+.cal-slot:hover:not(.disabled) {
   background: rgba(168,85,247,0.15);
   border-color: var(--clr-primary);
   color: var(--clr-primary);
@@ -2456,6 +2495,37 @@ body {
   background: var(--grad-main);
   border-color: transparent;
   color: #fff;
+}
+.cal-slot.disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: var(--clr-text-dim);
+  pointer-events: none;
+}
+.cal-slot.disabled .slot-time {
+  text-decoration: line-through;
+  font-size: 0.78rem;
+}
+.cal-slot.disabled .slot-badge {
+  font-size: 0.62rem;
+  font-family: var(--font-sans);
+  color: #f87171;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  margin-top: 2px;
+}
+.cal-no-slots {
+  padding: 18px 14px;
+  background: rgba(239, 68, 68, 0.07);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 8px;
+  color: var(--clr-text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+  line-height: 1.5;
 }
 
 /* --- Booked confirmation --- */

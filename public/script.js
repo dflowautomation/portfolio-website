@@ -756,6 +756,101 @@ function parseDateSlot(dateObjOrStr, timeStr) {
   return d;
 }
 
+function getDateKey(dateObj) {
+  if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) return '';
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function timeToMinutes(timeStr) {
+  if (!timeStr) return -1;
+  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!match) return -1;
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const ampm = match[3].toUpperCase();
+  if (ampm === 'PM' && hours < 12) hours += 12;
+  if (ampm === 'AM' && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
+const BOOKINGS_STORAGE_KEY = 'dflow_booked_slots';
+
+function getBookedSlots() {
+  try {
+    const raw = localStorage.getItem(BOOKINGS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveBookedSlot(dateKey, timeStr) {
+  if (!dateKey || !timeStr) return getBookedSlots();
+  try {
+    const bookings = getBookedSlots();
+    if (!Array.isArray(bookings[dateKey])) {
+      bookings[dateKey] = [];
+    }
+    if (!bookings[dateKey].includes(timeStr)) {
+      bookings[dateKey].push(timeStr);
+    }
+    localStorage.setItem(BOOKINGS_STORAGE_KEY, JSON.stringify(bookings));
+    return bookings;
+  } catch (e) {
+    console.warn('Error saving booked slot:', e);
+    return {};
+  }
+}
+
+function isSlotAvailable(dateKey, slotTime) {
+  if (!dateKey || !slotTime) return { available: false, reason: 'invalid_args' };
+  const bookings = getBookedSlots();
+  const dayBookings = bookings[dateKey] || [];
+
+  // RULE 1: Only twice on the same day (max 2 bookings per day)
+  if (dayBookings.length >= 2) {
+    return { available: false, reason: 'day_full' };
+  }
+
+  const candidateMin = timeToMinutes(slotTime);
+  if (candidateMin === -1) return { available: false, reason: 'invalid_time' };
+
+  for (const bookedTime of dayBookings) {
+    // RULE 2: No double booking on the same time on the same day
+    if (bookedTime === slotTime) {
+      return { available: false, reason: 'already_booked' };
+    }
+
+    // RULE 3: The time in-between should be 2 hours apart minimum (120 min)
+    const bookedMin = timeToMinutes(bookedTime);
+    if (bookedMin !== -1) {
+      const diff = Math.abs(candidateMin - bookedMin);
+      if (diff < 120) {
+        return { available: false, reason: 'buffer_conflict', conflictWith: bookedTime, diff };
+      }
+    }
+  }
+
+  return { available: true };
+}
+
+// Global debug/inspection helpers
+window.getPortfolioBookings = getBookedSlots;
+window.clearPortfolioBookings = function () {
+  localStorage.removeItem(BOOKINGS_STORAGE_KEY);
+  if (typeof window.refreshBookingCalendar === 'function') window.refreshBookingCalendar();
+  return {};
+};
+window.seedPortfolioBooking = function (dateKey, timeStr) {
+  saveBookedSlot(dateKey, timeStr);
+  if (typeof window.refreshBookingCalendar === 'function') window.refreshBookingCalendar();
+};
+
 function buildGCalUrl({ date, time, name, email }, meetUrl) {
   const startDate = parseDateSlot(date, time);
   const endDate = new Date(startDate.getTime() + 30 * 60000);
@@ -1135,6 +1230,9 @@ function initCalendarWidget(userName, userEmail) {
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       const isPast = dayDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const isToday = d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
+      const dateKey = getDateKey(dayDate);
+      const dayBookings = getBookedSlots()[dateKey] || [];
+      const isFullyBooked = dayBookings.length >= 2;
 
       const cell = document.createElement('div');
       cell.textContent = d;
@@ -1142,8 +1240,15 @@ function initCalendarWidget(userName, userEmail) {
 
       if (isPast || isWeekend) {
         cell.classList.add('disabled');
+      } else if (isFullyBooked) {
+        cell.classList.add('disabled', 'fully-booked');
+        cell.title = 'Fully Booked (Max 2 calls/day policy reached)';
       } else {
         cell.classList.add('available');
+        if (dayBookings.length === 1) {
+          cell.classList.add('has-booking');
+          cell.title = `1 call booked (${dayBookings[0]}) — 1 slot remaining (min 2h buffer)`;
+        }
         if (isToday) cell.classList.add('today');
         cell.addEventListener('click', () => selectDate(d, dayDate));
       }
@@ -1161,6 +1266,9 @@ function initCalendarWidget(userName, userEmail) {
     selectedTime = null;
     renderCalendar();
 
+    const dateKey = getDateKey(dayDate);
+    const dayBookings = getBookedSlots()[dateKey] || [];
+
     // Show time slots
     const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     dateLabel.textContent = dayDate.toLocaleDateString('en-US', opts);
@@ -1168,16 +1276,54 @@ function initCalendarWidget(userName, userEmail) {
     bookedEl.style.display = 'none';
     timesEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    // Render time slots
-    slotsEl.innerHTML = TIME_SLOTS.map(t => `<div class="cal-slot" data-time="${t}">${t}</div>`).join('');
-    slotsEl.querySelectorAll('.cal-slot').forEach(slot => {
-      slot.addEventListener('click', () => {
-        slotsEl.querySelectorAll('.cal-slot').forEach(s => s.classList.remove('selected'));
-        slot.classList.add('selected');
-        selectedTime = slot.dataset.time;
-        setTimeout(() => confirmBooking(), 400);
+    if (dayBookings.length >= 2) {
+      slotsEl.innerHTML = `
+        <div class="cal-no-slots" style="grid-column: 1 / -1;">
+          <i class="fas fa-calendar-times" style="font-size: 1.6rem; color: #ef4444; margin-bottom: 8px; display: block;"></i>
+          <strong>Fully Booked for ${dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</strong><br>
+          We accept a maximum of 2 strategy calls per day. Please choose another date on the calendar above.
+        </div>`;
+      return;
+    }
+
+    let availableCount = 0;
+    const slotsHtml = TIME_SLOTS.map(t => {
+      const check = isSlotAvailable(dateKey, t);
+      if (check.available) {
+        availableCount++;
+        return `<div class="cal-slot" data-time="${t}"><span class="slot-time">${t}</span></div>`;
+      } else {
+        const badge = check.reason === 'already_booked' ? 'Booked' : '2h buffer';
+        const tooltip = check.reason === 'already_booked' ?
+          'This slot is already booked' :
+          `Unavailable: Must be at least 2 hours apart from existing call at ${check.conflictWith}`;
+        return `
+          <div class="cal-slot disabled" data-time="${t}" title="${tooltip}">
+            <span class="slot-time">${t}</span>
+            <small class="slot-badge">${badge}</small>
+          </div>`;
+      }
+    }).join('');
+
+    if (availableCount === 0) {
+      slotsEl.innerHTML = `
+        <div class="cal-no-slots" style="grid-column: 1 / -1;">
+          <i class="fas fa-exclamation-triangle" style="font-size: 1.6rem; color: #f59e0b; margin-bottom: 8px; display: block;"></i>
+          <strong>No Remaining Slots Available</strong><br>
+          An existing call is scheduled at <strong>${dayBookings.join(', ')}</strong>.<br>
+          Due to the 2-hour minimum spacing buffer, no further slots can be booked on this date. Please select another date.
+        </div>`;
+    } else {
+      slotsEl.innerHTML = slotsHtml;
+      slotsEl.querySelectorAll('.cal-slot:not(.disabled)').forEach(slot => {
+        slot.addEventListener('click', () => {
+          slotsEl.querySelectorAll('.cal-slot').forEach(s => s.classList.remove('selected'));
+          slot.classList.add('selected');
+          selectedTime = slot.dataset.time;
+          setTimeout(() => confirmBooking(), 400);
+        });
       });
-    });
+    }
   }
 
   function generateMeetLink() {
@@ -1188,6 +1334,32 @@ function initCalendarWidget(userName, userEmail) {
 
   function confirmBooking() {
     if (!selectedDate || !selectedTime) return;
+    const dateKey = getDateKey(selectedDate);
+
+    // Rule validation check
+    const check = isSlotAvailable(dateKey, selectedTime);
+    if (!check.available) {
+      let alertMsg = 'This time slot is no longer available.';
+      if (check.reason === 'already_booked') {
+        alertMsg = 'This slot has already been booked on this day. Please select another time.';
+      } else if (check.reason === 'buffer_conflict') {
+        alertMsg = `Calls must be at least 2 hours apart from existing bookings (${check.conflictWith}). Please select another time.`;
+      } else if (check.reason === 'day_full') {
+        alertMsg = 'This day is already fully booked (maximum 2 calls per day). Please select another date.';
+      }
+      alert(alertMsg);
+      selectDate(selectedDate.getDate(), selectedDate);
+      return;
+    }
+
+    // Persist booking
+    saveBookedSlot(dateKey, selectedTime);
+
+    // Broadcast booking creation to other tabs & peers
+    if (typeof window.broadcastBookingCreated === 'function') {
+      window.broadcastBookingCreated(dateKey, selectedTime, userName);
+    }
+
     const opts = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
     const dateStr = selectedDate.toLocaleDateString('en-US', opts);
     bookedData = { date: dateStr, time: selectedTime, name: userName, email: userEmail, dateObj: selectedDate };
@@ -1241,6 +1413,13 @@ function initCalendarWidget(userName, userEmail) {
     window.lastBookedData = bookingPayload;
     window.tempBookingData = null;
   }
+
+  window.refreshBookingCalendar = function () {
+    renderCalendar();
+    if (selectedDate && timesEl.style.display !== 'none') {
+      selectDate(selectedDate.getDate(), selectedDate);
+    }
+  };
 
   // Month navigation
   if (prevBtn) prevBtn.addEventListener('click', () => {
@@ -1828,6 +2007,13 @@ document.head.appendChild(style);
           chatWindow.classList.add('open');
         }
       }
+    } else if (payload.type === 'booking_slot_reserved') {
+      if (payload.dateKey && payload.time) {
+        saveBookedSlot(payload.dateKey, payload.time);
+        if (typeof window.refreshBookingCalendar === 'function') {
+          window.refreshBookingCalendar();
+        }
+      }
     }
   }
 
@@ -2028,6 +2214,17 @@ document.head.appendChild(style);
       if (aiWindow) aiWindow.classList.remove('open');
       chatWindow.classList.add('open');
     }
+  };
+
+  // Expose real-time booking slot broadcast across peers/windows
+  window.broadcastBookingCreated = function (dateKey, time, name) {
+    broadcastChat({
+      type: 'booking_slot_reserved',
+      dateKey,
+      time,
+      name,
+      senderTabId: myTabId
+    });
   };
 
   // Active Visitor Geolocation marquee
