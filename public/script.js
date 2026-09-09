@@ -907,9 +907,9 @@ function downloadIcsFile({ date, time, name, email }, meetUrl) {
     email ? `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN="${name || 'Client'}":mailto:${email}` : '',
     'STATUS:CONFIRMED',
     'BEGIN:VALARM',
-    'TRIGGER:-PT15M',
+    'TRIGGER:-PT30M',
     'ACTION:DISPLAY',
-    'DESCRIPTION:Strategy Call with DFlowAutomation in 15 minutes',
+    'DESCRIPTION:Strategy Call with DFlowAutomation in 30 minutes',
     'END:VALARM',
     'END:VEVENT',
     'END:VCALENDAR'
@@ -925,6 +925,337 @@ function downloadIcsFile({ date, time, name, email }, meetUrl) {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* ---- BOOKING REMINDER SCHEDULER ----
+   Stores upcoming booking reminders in localStorage.
+   Sends a reminder email 30 minutes before the call via FormSubmit.
+   On every page load, scans for pending reminders and sets timeouts.
+   ------------------------------------------------------------ */
+const REMINDER_STORAGE_KEY = 'dflow_booking_reminders';
+const REMINDER_LEAD_MINUTES = 30;
+
+function getScheduledReminders() {
+  try {
+    return JSON.parse(localStorage.getItem(REMINDER_STORAGE_KEY) || '[]');
+  } catch { return []; }
+}
+
+function saveScheduledReminders(reminders) {
+  try { localStorage.setItem(REMINDER_STORAGE_KEY, JSON.stringify(reminders)); } catch {}
+}
+
+/**
+ * Convert a Date object + "H:MM AM/PM" string → epoch millis in Philippine Time (UTC+8).
+ */
+function bookingToEpoch(dateObj, timeStr) {
+  const m = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!m) return null;
+  let hours = parseInt(m[1], 10);
+  const mins = parseInt(m[2], 10);
+  const ampm = m[3].toUpperCase();
+  if (ampm === 'PM' && hours !== 12) hours += 12;
+  if (ampm === 'AM' && hours === 12) hours = 0;
+
+  // Build a date from the booking's calendar date parts
+  let d;
+  if (dateObj instanceof Date && !isNaN(dateObj.getTime())) {
+    d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), hours, mins, 0, 0);
+  } else if (typeof dateObj === 'string') {
+    const parsed = new Date(dateObj);
+    if (!isNaN(parsed.getTime())) {
+      d = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), hours, mins, 0, 0);
+    }
+  }
+  if (!d) return null;
+
+  // The user's browser is in Philippine Time (UTC+8).
+  // If the browser isn't in PHT, adjust — but for simplicity, assume local timezone matches.
+  return d.getTime();
+}
+
+function scheduleBookingReminder(data) {
+  const bookingEpoch = bookingToEpoch(data.date_obj || data.booking_date, data.booking_time);
+  if (!bookingEpoch) {
+    console.warn('Could not parse booking time for reminder scheduling.');
+    return;
+  }
+
+  const reminderEpoch = bookingEpoch - (REMINDER_LEAD_MINUTES * 60 * 1000);
+  const now = Date.now();
+
+  // Don't schedule if the reminder time is already past
+  if (reminderEpoch < now - 60000) {
+    console.log('Reminder time already passed; skipping schedule.');
+    return;
+  }
+
+  const gcalLink = buildGCalUrl({
+    date: data.date_obj || data.booking_date,
+    time: data.booking_time,
+    name: data.from_name,
+    email: data.from_email
+  }, data.meet_url);
+
+  const reminder = {
+    id: `rem_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    clientName: data.from_name,
+    clientEmail: data.from_email,
+    bookingDate: data.booking_date,
+    bookingTime: data.booking_time,
+    meetUrl: data.meet_url,
+    gcalLink,
+    reminderEpoch,
+    bookingEpoch,
+    sent: false
+  };
+
+  const reminders = getScheduledReminders();
+  reminders.push(reminder);
+  saveScheduledReminders(reminders);
+
+  // Set in-browser timeout
+  const delay = reminderEpoch - now;
+  if (delay > 0) {
+    setTimeout(() => fireReminder(reminder.id), delay);
+    console.log(`Booking reminder scheduled: fires in ${Math.round(delay / 60000)} min (${new Date(reminderEpoch).toLocaleTimeString()})`);
+  }
+}
+
+async function fireReminder(reminderId) {
+  const reminders = getScheduledReminders();
+  const idx = reminders.findIndex(r => r.id === reminderId);
+  if (idx === -1 || reminders[idx].sent) return;
+
+  const rem = reminders[idx];
+  console.log(`🔔 Firing 30-min booking reminder for ${rem.clientName} (${rem.clientEmail})`);
+
+  // 1. Send reminder email to client via FormSubmit
+  await sendReminderEmail(rem);
+
+  // 2. Send reminder notification to owner
+  await sendOwnerReminderEmail(rem);
+
+  // 3. Show browser notification if available
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('📅 Strategy Call in 30 Minutes', {
+      body: `Your call with DFlowAutomation is at ${rem.bookingTime}.\nGoogle Meet: ${rem.meetUrl}`,
+      icon: 'https://dflowautomation.site/favicon.ico',
+      tag: `dflow-reminder-${rem.id}`
+    });
+  }
+
+  // 4. Mark as sent
+  reminders[idx].sent = true;
+  saveScheduledReminders(reminders);
+}
+
+async function sendReminderEmail(rem) {
+  try {
+    const payload = {
+      _subject: `⏰ Reminder: Your Strategy Call is in 30 Minutes!`,
+      _replyto: OWNER_EMAIL,
+      _template: 'table',
+      _captcha: 'false',
+      _autoresponse: [
+        `Hi ${rem.clientName},`,
+        ``,
+        `This is a friendly reminder that your Free Strategy Call with DFlowAutomation starts in 30 minutes!`,
+        ``,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        `📅 Date: ${rem.bookingDate}`,
+        `⏰ Time: ${rem.bookingTime} (Philippine Time)`,
+        `📹 Google Meet: ${rem.meetUrl}`,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        ``,
+        `👉 Join the call here: ${rem.meetUrl}`,
+        ``,
+        `Tips to prepare:`,
+        `• Have a list of your biggest time-consuming tasks ready`,
+        `• Think about your automation goals for the next 90 days`,
+        `• Prepare any questions about AI & automation workflows`,
+        ``,
+        `See you soon!`,
+        ``,
+        `Best regards,`,
+        `Don Sufrir`,
+        `DFlowAutomation`,
+        `https://dflowautomation.site`
+      ].join('\n'),
+      'Reminder Type': '30-Minute Pre-Call Reminder',
+      'Client Name': rem.clientName,
+      'Client Email': rem.clientEmail,
+      'Booking Date': rem.bookingDate,
+      'Booking Time': `${rem.bookingTime} (Philippine Time)`,
+      'Google Meet Link': rem.meetUrl
+    };
+
+    // Submit to client's email so they get the _autoresponse
+    const res = await fetch(`https://formsubmit.co/ajax/${rem.clientEmail}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) console.log('✅ 30-min reminder email sent to client:', rem.clientEmail);
+    else console.warn('Reminder email response not OK:', res.status);
+  } catch (err) {
+    console.warn('Reminder email dispatch to client failed:', err);
+  }
+}
+
+async function sendOwnerReminderEmail(rem) {
+  try {
+    const payload = {
+      _subject: `⏰ REMINDER: Strategy Call with ${rem.clientName} in 30 Minutes`,
+      _replyto: rem.clientEmail,
+      _template: 'table',
+      _captcha: 'false',
+      'Reminder Type': '30-Minute Pre-Call Reminder — OWNER NOTIFICATION',
+      'Client Name': rem.clientName,
+      'Client Email': rem.clientEmail,
+      'Booking Date': rem.bookingDate,
+      'Booking Time': `${rem.bookingTime} (Philippine Time)`,
+      'Google Meet Link': rem.meetUrl
+    };
+
+    const res = await fetch(`https://formsubmit.co/ajax/${OWNER_EMAIL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) console.log('✅ 30-min reminder sent to owner');
+  } catch (err) {
+    console.warn('Owner reminder dispatch failed:', err);
+  }
+}
+
+/**
+ * Called on every page load to process any pending reminders.
+ * Sets timeouts for upcoming reminders, and fires overdue ones (within a 10-min grace window).
+ */
+function processScheduledReminders() {
+  const reminders = getScheduledReminders();
+  const now = Date.now();
+  const GRACE_MS = 10 * 60 * 1000; // 10 minute grace period for missed reminders
+  let changed = false;
+
+  reminders.forEach(rem => {
+    if (rem.sent) return;
+
+    // If the booking itself has already passed, mark as expired
+    if (rem.bookingEpoch && rem.bookingEpoch < now - GRACE_MS) {
+      rem.sent = true; // expired, don't send
+      changed = true;
+      return;
+    }
+
+    const delay = rem.reminderEpoch - now;
+
+    if (delay <= 0 && delay > -GRACE_MS) {
+      // Overdue but within grace window — fire immediately
+      fireReminder(rem.id);
+    } else if (delay > 0) {
+      // Schedule for the future
+      setTimeout(() => fireReminder(rem.id), delay);
+      console.log(`Restored reminder for ${rem.clientName}: fires in ${Math.round(delay / 60000)} min`);
+    }
+  });
+
+  // Clean up old reminders (older than 24 hours past booking)
+  const cleaned = reminders.filter(r => !r.bookingEpoch || r.bookingEpoch > now - 24 * 60 * 60 * 1000);
+  if (cleaned.length !== reminders.length || changed) {
+    saveScheduledReminders(cleaned);
+  }
+
+  // Request notification permission for browser notifications
+  if ('Notification' in window && Notification.permission === 'default') {
+    // We'll request when user interacts with the page
+    document.addEventListener('click', function requestNotifPerm() {
+      Notification.requestPermission();
+      document.removeEventListener('click', requestNotifPerm);
+    }, { once: true });
+  }
+}
+
+/* ---- CLIENT CONFIRMATION EMAIL ----
+   Sends a dedicated thank-you and confirmation email to the client
+   via FormSubmit. This is a SEPARATE call from the owner notification
+   to guarantee delivery to the client's inbox.
+   ------------------------------------------------------------ */
+async function sendClientConfirmationEmail(data, gcalLink) {
+  try {
+    const payload = {
+      _subject: `✅ Booking Confirmed — Strategy Call on ${data.booking_date} at ${data.booking_time}`,
+      _replyto: OWNER_EMAIL,
+      _template: 'table',
+      _captcha: 'false',
+      _autoresponse: [
+        `Hi ${data.from_name},`,
+        ``,
+        `Thank you for booking your Free Strategy Call with DFlowAutomation! 🎉`,
+        ``,
+        `Here are your confirmed booking details:`,
+        ``,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        `📅 Date: ${data.booking_date}`,
+        `⏰ Time: ${data.booking_time} (Philippine Time)`,
+        `⏱️ Duration: 30 minutes`,
+        `📹 Google Meet: ${data.meet_url}`,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        ``,
+        `📌 Add to your Google Calendar:`,
+        `${gcalLink}`,
+        ``,
+        `What to expect:`,
+        `• Don Sufrir will review your questionnaire answers before the call`,
+        `• We'll jump straight into high-impact automation recommendations`,
+        `• You'll receive actionable next steps tailored to your business`,
+        ``,
+        `How to prepare:`,
+        `• Have a list of your most time-consuming manual tasks ready`,
+        `• Think about your automation goals for the next 90 days`,
+        `• Prepare any questions about AI and automation workflows`,
+        ``,
+        `⏰ You will receive a reminder email 30 minutes before your call.`,
+        ``,
+        `Need to reschedule or have questions beforehand?`,
+        `Simply reply to this email or contact dflowautomation@gmail.com.`,
+        ``,
+        `Looking forward to speaking with you!`,
+        ``,
+        `Best regards,`,
+        `Don Sufrir`,
+        `AI Automation Specialist`,
+        `DFlowAutomation`,
+        `https://dflowautomation.site`
+      ].join('\n'),
+      'Confirmation For': data.from_name,
+      'Client Email': data.from_email,
+      'Booking Date': data.booking_date,
+      'Booking Time': `${data.booking_time} (Philippine Time)`,
+      'Google Meet Link': data.meet_url,
+      'Google Calendar': gcalLink
+    };
+
+    // Submit TO the client's email address — FormSubmit sends the _autoresponse to the submitter
+    const res = await fetch(`https://formsubmit.co/ajax/${data.from_email}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      console.log('✅ Client confirmation email dispatched to:', data.from_email);
+      return true;
+    } else {
+      console.warn('Client confirmation response not OK:', res.status);
+    }
+  } catch (err) {
+    console.warn('Client confirmation email dispatch failed:', err);
+  }
+  return false;
 }
 
 async function sendBookingNotification(data) {
@@ -973,7 +1304,7 @@ async function sendBookingNotification(data) {
     }
   }
 
-  // 3. Automated Direct Dispatch to dflowautomation@gmail.com + Client Autoresponse
+  // 3. Automated Direct Dispatch to dflowautomation@gmail.com (Owner Notification)
   if (!sent) {
     try {
       const payload = {
@@ -981,7 +1312,6 @@ async function sendBookingNotification(data) {
         _replyto: data.from_email,
         _template: 'table',
         _captcha: 'false',
-        _autoresponse: `Hi ${data.from_name},\n\nThank you for scheduling your Strategy Call with DFlowAutomation!\n\nYour booking details:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 Date: ${data.booking_date}\n⏰ Time: ${data.booking_time} (Philippine Time)\n📹 Google Meet: ${data.meet_url}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nAdd this call to your Google Calendar in 1 click:\n${gcalLink}\n\nDon Sufrir will review your questionnaire answers before the call so we can jump right into high-impact automation recommendations for your business.\n\nNeed to reschedule or have questions beforehand? Simply reply directly to this email or contact dflowautomation@gmail.com.\n\nBest regards,\nDon Sufrir\nDFlowAutomation\nhttps://dflowautomation.site`,
         'Client Name': data.from_name,
         'Client Email': data.from_email,
         'Client Phone': data.from_phone,
@@ -1020,12 +1350,18 @@ async function sendBookingNotification(data) {
 
       if (res.ok) {
         sent = true;
-        console.log('Automated booking notification and client autoresponse dispatched successfully.');
+        console.log('✅ Owner booking notification dispatched to:', OWNER_EMAIL);
       }
     } catch (err) {
-      console.warn('Direct email dispatch failed:', err);
+      console.warn('Owner email dispatch failed:', err);
     }
   }
+
+  // 4. Dedicated Client Confirmation Email (always attempt, regardless of method above)
+  sendClientConfirmationEmail(data, gcalLink);
+
+  // 5. Schedule 30-minute reminder
+  scheduleBookingReminder(data);
 
   return sent;
 }
@@ -1442,6 +1778,8 @@ function initCalendarWidget(userName, userEmail) {
 }
 
 
+// Process any scheduled booking reminders on every page load
+try { processScheduledReminders(); } catch (err) { console.warn('Reminder processing error:', err); }
 
 
 /* =============================================
