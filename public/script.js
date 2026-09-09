@@ -1504,28 +1504,32 @@ document.head.appendChild(style);
   const activeTabs = new Map();
 
   function assignUserNumber() {
-    if (myUserNum) return;
     const taken = new Set();
     for (const [id, info] of activeTabs.entries()) {
-      if (info && info.userNum) {
+      if (id !== myTabId && info && info.userNum) {
         taken.add(info.userNum);
       }
     }
-    let candidate = 1;
-    while (taken.has(candidate)) {
-      candidate++;
+    if (myUserNum && taken.has(myUserNum)) {
+      myUserNum = null;
     }
-    myUserNum = candidate;
-    try {
-      sessionStorage.setItem('cc_user_num', myUserNum);
-    } catch (e) {}
+    if (!myUserNum) {
+      let candidate = 1;
+      while (taken.has(candidate)) {
+        candidate++;
+      }
+      myUserNum = candidate;
+      try {
+        sessionStorage.setItem('cc_user_num', myUserNum);
+      } catch (e) {}
+    }
   }
 
   assignUserNumber();
   activeTabs.set(myTabId, { ts: Date.now(), userNum: myUserNum });
 
   function getMyUserTag() {
-    if (!myUserNum) assignUserNumber();
+    assignUserNumber();
     return 'user' + formatUserNum(myUserNum);
   }
 
@@ -1593,14 +1597,23 @@ document.head.appendChild(style);
   function handlePresenceMessage(data) {
     if (!data || !data.id || data.id === myTabId) return;
 
-    if (data.type === 'join') {
+    if (data.type === 'join' || data.type === 'ping' || data.type === 'pong') {
       activeTabs.set(data.id, { ts: Date.now(), userNum: data.userNum });
       updateOnlineCounts();
-      // Immediately reply with pong so newly joined tab registers us instantly with our userNum
-      broadcastPresence({ type: 'pong', id: myTabId, userNum: myUserNum, ts: Date.now() }, true);
-    } else if (data.type === 'ping' || data.type === 'pong') {
-      activeTabs.set(data.id, { ts: Date.now(), userNum: data.userNum });
-      updateOnlineCounts();
+
+      // Resolve collision if peer has the same user number
+      if (data.userNum && data.userNum === myUserNum) {
+        if (myTabId > data.id) {
+          assignUserNumber();
+          activeTabs.set(myTabId, { ts: Date.now(), userNum: myUserNum });
+          broadcastPresence({ type: 'ping', id: myTabId, userNum: myUserNum, ts: Date.now() }, true);
+        }
+      }
+
+      if (data.type === 'join') {
+        // Reply with pong so newly joined tab registers us instantly with our userNum
+        broadcastPresence({ type: 'pong', id: myTabId, userNum: myUserNum, ts: Date.now() }, true);
+      }
     } else if (data.type === 'leave') {
       activeTabs.delete(data.id);
       updateOnlineCounts();
