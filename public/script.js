@@ -1376,36 +1376,42 @@ document.head.appendChild(style);
   }
 
   if (messagesContainer) {
-    // Start with the standard system welcome log
+    // Render initial system welcome log
     messagesContainer.innerHTML = '<div class="cc-status-log">Connected to #general. Welcome to the Community Chat!</div>';
 
     // Render stored history
     savedMessages.forEach(msg => {
-      const msgEl = document.createElement('div');
-      if (msg.type === 'system') {
-        msgEl.className = 'cc-status-log';
-        msgEl.style.background = 'rgba(168, 85, 247, 0.08)';
-        msgEl.style.border = '1px solid rgba(168, 85, 247, 0.2)';
-        msgEl.style.color = 'var(--clr-primary)';
-        msgEl.style.fontWeight = '600';
-        msgEl.innerHTML = `<i class="fas fa-calendar-check" style="margin-right: 6px;"></i> ${msg.text}`;
-      } else {
-        msgEl.className = 'cc-msg';
-        msgEl.innerHTML = `
-          <div class="cc-avatar" style="background-color: ${msg.avatarBg}; color: ${msg.avatarText};">${msg.avatarLetter || 'YO'}</div>
-          <div class="cc-msg-content">
-            <div class="cc-msg-meta">
-              <span class="cc-author">${msg.author}</span>
-              <span class="cc-time">${msg.time}</span>
-            </div>
-            <p class="cc-text">${msg.text}</p>
-          </div>
-        `;
-      }
-      messagesContainer.appendChild(msgEl);
+      renderChatMessage(msg);
     });
 
     // Scroll to end of list
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  function renderChatMessage(msg) {
+    if (!messagesContainer || !msg) return;
+    const msgEl = document.createElement('div');
+    if (msg.type === 'system') {
+      msgEl.className = 'cc-status-log';
+      msgEl.style.background = 'rgba(168, 85, 247, 0.08)';
+      msgEl.style.border = '1px solid rgba(168, 85, 247, 0.2)';
+      msgEl.style.color = 'var(--clr-primary)';
+      msgEl.style.fontWeight = '600';
+      msgEl.innerHTML = `<i class="fas fa-calendar-check" style="margin-right: 6px;"></i> ${msg.text}`;
+    } else {
+      msgEl.className = 'cc-msg';
+      msgEl.innerHTML = `
+        <div class="cc-avatar" style="background-color: ${msg.avatarBg || '#c084fc'}; color: ${msg.avatarText || '#581c87'};">${escapeHTML(msg.avatarLetter || 'YO')}</div>
+        <div class="cc-msg-content">
+          <div class="cc-msg-meta">
+            <span class="cc-author">${escapeHTML(msg.author || 'Visitor')}</span>
+            <span class="cc-time">${escapeHTML(msg.time || 'Just now')}</span>
+          </div>
+          <p class="cc-text">${escapeHTML(msg.text)}</p>
+        </div>
+      `;
+    }
+    messagesContainer.appendChild(msgEl);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
@@ -1445,6 +1451,256 @@ document.head.appendChild(style);
     chatWindow.classList.remove('open');
   });
 
+  function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>'"]/g,
+      tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+    );
+  }
+
+  // =========================================================================
+  // REAL-TIME PRESENCE & CHAT SYNCHRONIZATION ENGINE
+  // =========================================================================
+  const myTabId = 'tab_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+  const PRESENCE_TOPIC = 'dflowautomation/portfolio/presence';
+  const CHAT_TOPIC = 'dflowautomation/portfolio/chat';
+
+  const activeTabs = new Map();
+  activeTabs.set(myTabId, Date.now());
+
+  // BroadcastChannel for instant same-browser profile sync
+  let localBcPresence = null;
+  let localBcChat = null;
+  try {
+    if (typeof BroadcastChannel !== 'undefined') {
+      localBcPresence = new BroadcastChannel('dflow_portfolio_presence_bc');
+      localBcChat = new BroadcastChannel('dflow_portfolio_chat_bc');
+    }
+  } catch (e) {
+    console.warn('BroadcastChannel not available:', e);
+  }
+
+  function updateOnlineCounts() {
+    const now = Date.now();
+    for (const [id, ts] of activeTabs.entries()) {
+      if (id !== myTabId && now - ts > 14000) {
+        activeTabs.delete(id);
+      }
+    }
+
+    const count = Math.max(1, activeTabs.size);
+    const onlineCountEl = document.getElementById('onlineCount');
+    const onlineCountMobileEl = document.getElementById('onlineCountMobile');
+    const ccViewingCountEl = document.getElementById('ccViewingCount');
+
+    if (onlineCountEl) onlineCountEl.textContent = count;
+    if (onlineCountMobileEl) onlineCountMobileEl.textContent = count;
+    if (ccViewingCountEl) ccViewingCountEl.textContent = count;
+  }
+
+  let mqttClient = null;
+
+  function broadcastPresence(payload, sendToMqtt = true) {
+    if (localBcPresence) {
+      try { localBcPresence.postMessage(payload); } catch (e) {}
+    }
+    if (sendToMqtt && mqttClient && typeof mqttClient.isConnected === 'function' && mqttClient.isConnected()) {
+      try {
+        const msg = new Paho.MQTT.Message(JSON.stringify(payload));
+        msg.destinationName = PRESENCE_TOPIC;
+        msg.qos = 0;
+        mqttClient.send(msg);
+      } catch (e) {}
+    }
+  }
+
+  function broadcastChat(payload) {
+    if (localBcChat) {
+      try { localBcChat.postMessage(payload); } catch (e) {}
+    }
+    if (mqttClient && typeof mqttClient.isConnected === 'function' && mqttClient.isConnected()) {
+      try {
+        const msg = new Paho.MQTT.Message(JSON.stringify(payload));
+        msg.destinationName = CHAT_TOPIC;
+        msg.qos = 0;
+        mqttClient.send(msg);
+      } catch (e) {}
+    }
+  }
+
+  function handlePresenceMessage(data) {
+    if (!data || !data.id || data.id === myTabId) return;
+
+    if (data.type === 'join') {
+      activeTabs.set(data.id, Date.now());
+      updateOnlineCounts();
+      // Immediately reply with pong so newly joined tab registers us instantly
+      broadcastPresence({ type: 'pong', id: myTabId, ts: Date.now() }, true);
+    } else if (data.type === 'ping' || data.type === 'pong') {
+      activeTabs.set(data.id, Date.now());
+      updateOnlineCounts();
+    } else if (data.type === 'leave') {
+      activeTabs.delete(data.id);
+      updateOnlineCounts();
+    }
+  }
+
+  function handleIncomingChat(payload) {
+    if (!payload || payload.senderTabId === myTabId) return;
+
+    if (payload.type === 'user_msg' && payload.msg) {
+      const exists = savedMessages.some(m => m.id && m.id === payload.msg.id);
+      if (!exists) {
+        savedMessages.push(payload.msg);
+        try {
+          localStorage.setItem('cc_messages', JSON.stringify(savedMessages.slice(-50)));
+        } catch (e) {}
+        renderChatMessage(payload.msg);
+      }
+    } else if (payload.type === 'booking_notice') {
+      const exists = savedMessages.some(m => m.id && m.id === payload.id);
+      if (!exists) {
+        const sysMsg = {
+          id: payload.id,
+          type: 'system',
+          text: payload.textContent
+        };
+        savedMessages.push(sysMsg);
+        try {
+          localStorage.setItem('cc_messages', JSON.stringify(savedMessages.slice(-50)));
+        } catch (e) {}
+        renderChatMessage(sysMsg);
+
+        if (chatWindow && !chatWindow.classList.contains('open')) {
+          if (aiWindow) aiWindow.classList.remove('open');
+          chatWindow.classList.add('open');
+        }
+      }
+    }
+  }
+
+  if (localBcPresence) {
+    localBcPresence.onmessage = (evt) => handlePresenceMessage(evt.data);
+  }
+  if (localBcChat) {
+    localBcChat.onmessage = (evt) => handleIncomingChat(evt.data);
+  }
+
+  // Load Paho MQTT library dynamically if not yet available
+  function ensureMqttClient() {
+    if (window.Paho && window.Paho.MQTT) {
+      return Promise.resolve(window.Paho.MQTT);
+    }
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js';
+      script.onload = () => {
+        if (window.Paho && window.Paho.MQTT) resolve(window.Paho.MQTT);
+        else reject(new Error('Paho MQTT not defined'));
+      };
+      script.onerror = () => {
+        const fallback = document.createElement('script');
+        fallback.src = 'https://cdn.jsdelivr.net/npm/paho-mqtt@1.1.0/paho-mqtt.min.js';
+        fallback.onload = () => {
+          if (window.Paho && window.Paho.MQTT) resolve(window.Paho.MQTT);
+          else reject(new Error('Paho fallback failed'));
+        };
+        fallback.onerror = reject;
+        document.head.appendChild(fallback);
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  const mqttBrokers = [
+    { host: 'broker.hivemq.com', port: 8884, path: '/mqtt' },
+    { host: 'broker.emqx.io', port: 8084, path: '/mqtt' }
+  ];
+  let currentBrokerIndex = 0;
+
+  async function connectMqtt() {
+    try {
+      await ensureMqttClient();
+    } catch (err) {
+      console.warn('Real-time MQTT client unavailable; using local presence fallback.', err);
+      return;
+    }
+
+    const broker = mqttBrokers[currentBrokerIndex];
+    try {
+      const client = new Paho.MQTT.Client(broker.host, broker.port, broker.path, myTabId);
+      mqttClient = client;
+
+      // Last Will and Testament: broker will publish leave if tab crashes or closes abruptly
+      const willMsg = new Paho.MQTT.Message(JSON.stringify({ type: 'leave', id: myTabId }));
+      willMsg.destinationName = PRESENCE_TOPIC;
+      willMsg.qos = 0;
+      willMsg.retained = false;
+
+      client.onConnectionLost = (responseObject) => {
+        console.warn('Presence connection lost:', responseObject.errorMessage);
+        currentBrokerIndex = (currentBrokerIndex + 1) % mqttBrokers.length;
+        setTimeout(connectMqtt, 3000);
+      };
+
+      client.onMessageArrived = (message) => {
+        try {
+          const topic = message.destinationName;
+          const data = JSON.parse(message.payloadString);
+          if (topic === PRESENCE_TOPIC) {
+            handlePresenceMessage(data);
+          } else if (topic === CHAT_TOPIC) {
+            handleIncomingChat(data);
+          }
+        } catch (e) {
+          console.warn('Error reading realtime message:', e);
+        }
+      };
+
+      client.connect({
+        useSSL: true,
+        timeout: 5,
+        keepAliveInterval: 30,
+        cleanSession: true,
+        willMessage: willMsg,
+        onSuccess: () => {
+          client.subscribe(PRESENCE_TOPIC);
+          client.subscribe(CHAT_TOPIC);
+          // Broadcast join message across all windows/devices
+          broadcastPresence({ type: 'join', id: myTabId, ts: Date.now() }, true);
+        },
+        onFailure: (err) => {
+          console.warn('Presence connection failed with ' + broker.host + ':', err);
+          currentBrokerIndex = (currentBrokerIndex + 1) % mqttBrokers.length;
+          setTimeout(connectMqtt, 4000);
+        }
+      });
+    } catch (e) {
+      console.warn('Error initializing MQTT client:', e);
+      currentBrokerIndex = (currentBrokerIndex + 1) % mqttBrokers.length;
+      setTimeout(connectMqtt, 4000);
+    }
+  }
+
+  // Periodic heartbeat every 6 seconds
+  setInterval(() => {
+    broadcastPresence({ type: 'ping', id: myTabId, ts: Date.now() }, true);
+  }, 6000);
+
+  // Prune expired sessions & update count every 1 second
+  setInterval(updateOnlineCounts, 1000);
+
+  // Leave announcement on close
+  function handleLeave() {
+    broadcastPresence({ type: 'leave', id: myTabId }, true);
+  }
+  window.addEventListener('beforeunload', handleLeave);
+  window.addEventListener('pagehide', handleLeave);
+
+  // Announce join locally and start MQTT
+  broadcastPresence({ type: 'join', id: myTabId, ts: Date.now() }, false);
+  connectMqtt();
+
   // Send message
   if (inputForm) {
     inputForm.addEventListener('submit', (e) => {
@@ -1471,11 +1727,13 @@ document.head.appendChild(style);
         }
       }
 
+      const msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
       const msgObj = {
+        id: msgId,
         type: 'user',
         author: authorName,
         time: 'Just now',
-        text: escapeHTML(text),
+        text: text,
         avatarBg: bgColors[randIndex],
         avatarText: textColors[randIndex],
         avatarLetter: initials
@@ -1483,111 +1741,52 @@ document.head.appendChild(style);
 
       savedMessages.push(msgObj);
       try {
-        localStorage.setItem('cc_messages', JSON.stringify(savedMessages));
+        localStorage.setItem('cc_messages', JSON.stringify(savedMessages.slice(-50)));
       } catch (err) {
         console.warn('Error saving chat message to local storage:', err);
       }
 
-      // Create new message element
-      const msgEl = document.createElement('div');
-      msgEl.className = 'cc-msg';
-      msgEl.innerHTML = `
-        <div class="cc-avatar" style="background-color: ${msgObj.avatarBg}; color: ${msgObj.avatarText};">${msgObj.avatarLetter}</div>
-        <div class="cc-msg-content">
-          <div class="cc-msg-meta">
-            <span class="cc-author">${msgObj.author}</span>
-            <span class="cc-time">Just now</span>
-          </div>
-          <p class="cc-text">${msgObj.text}</p>
-        </div>
-      `;
-
-      messagesContainer.appendChild(msgEl);
+      renderChatMessage(msgObj);
+      broadcastChat({ type: 'user_msg', msg: msgObj, senderTabId: myTabId });
       messageInput.value = '';
-
-      // Auto scroll to bottom
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
   }
 
-  function escapeHTML(str) {
-    return str.replace(/[&<>'"]/g,
-      tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-    );
-  }
-
-  // Expose notification callback globally
+  // Expose booking notification callback globally
   window.triggerBookingNotification = function (name, time, date) {
     if (!messagesContainer) return;
     const textContent = `<strong>${escapeHTML(name)}</strong> just booked a Strategy Call for ${date} at ${time}!`;
+    const noticeId = 'notice_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
 
-    // Save system message to local storage
     const msgObj = {
+      id: noticeId,
       type: 'system',
       text: textContent
     };
     savedMessages.push(msgObj);
     try {
-      localStorage.setItem('cc_messages', JSON.stringify(savedMessages));
+      localStorage.setItem('cc_messages', JSON.stringify(savedMessages.slice(-50)));
     } catch (err) {
       console.warn('Error saving booking notice to local storage:', err);
     }
 
-    const msgEl = document.createElement('div');
-    msgEl.className = 'cc-status-log';
-    msgEl.style.background = 'rgba(168, 85, 247, 0.08)';
-    msgEl.style.border = '1px solid rgba(168, 85, 247, 0.2)';
-    msgEl.style.color = 'var(--clr-primary)';
-    msgEl.style.fontWeight = '600';
-    msgEl.innerHTML = `<i class="fas fa-calendar-check" style="margin-right: 6px;"></i> ${textContent}`;
-    
-    messagesContainer.appendChild(msgEl);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    renderChatMessage(msgObj);
+    broadcastChat({
+      type: 'booking_notice',
+      id: noticeId,
+      name,
+      time,
+      date,
+      textContent,
+      senderTabId: myTabId
+    });
 
     // Automatically slide open the community chat widget to show the notification
     if (chatWindow && !chatWindow.classList.contains('open')) {
-      const aiWindow = document.getElementById('chatbotWindow');
       if (aiWindow) aiWindow.classList.remove('open');
       chatWindow.classList.add('open');
     }
   };
-
-  // Real-time simultaneous visitor counter via public room broker
-  (async function initRealtimePresence() {
-    try {
-      const Y = await import('https://esm.sh/yjs@13.6.10');
-      const { WebsocketProvider } = await import('https://esm.sh/y-websocket@1.5.0');
-      
-      const ydoc = new Y.Doc();
-      const provider = new WebsocketProvider(
-        'wss://demos.yjs.dev',
-        'dflowautomation-portfolio-presence-v1',
-        ydoc
-      );
-
-      provider.awareness.on('change', () => {
-        const count = provider.awareness.getStates().size;
-        const onlineCountEl = document.getElementById('onlineCount');
-        const onlineCountMobileEl = document.getElementById('onlineCountMobile');
-        const ccViewingCountEl = document.getElementById('ccViewingCount');
-        
-        if (onlineCountEl) onlineCountEl.textContent = count;
-        if (onlineCountMobileEl) onlineCountMobileEl.textContent = count;
-        if (ccViewingCountEl) ccViewingCountEl.textContent = count;
-      });
-
-      // Register local presence state
-      provider.awareness.setLocalStateField('user', { active: true });
-    } catch (err) {
-      console.warn('Realtime presence count setup failed. Falling back to 1.', err);
-      const onlineCountEl = document.getElementById('onlineCount');
-      const onlineCountMobileEl = document.getElementById('onlineCountMobile');
-      const ccViewingCountEl = document.getElementById('ccViewingCount');
-      if (onlineCountEl) onlineCountEl.textContent = '1';
-      if (onlineCountMobileEl) onlineCountMobileEl.textContent = '1';
-      if (ccViewingCountEl) ccViewingCountEl.textContent = '1';
-    }
-  })();
 
   // Active Visitor Geolocation marquee
   const marqueeEl = chatWindow.querySelector('.cc-marquee');
