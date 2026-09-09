@@ -1399,12 +1399,18 @@ document.head.appendChild(style);
       msgEl.style.fontWeight = '600';
       msgEl.innerHTML = `<i class="fas fa-calendar-check" style="margin-right: 6px;"></i> ${msg.text}`;
     } else {
+      let author = msg.author || 'user001';
+      if (author === 'You (Visitor)') author = 'user001';
+
+      let letter = msg.avatarLetter || '001';
+      if (letter === 'YO') letter = '001';
+
       msgEl.className = 'cc-msg';
       msgEl.innerHTML = `
-        <div class="cc-avatar" style="background-color: ${msg.avatarBg || '#c084fc'}; color: ${msg.avatarText || '#581c87'};">${escapeHTML(msg.avatarLetter || 'YO')}</div>
+        <div class="cc-avatar" style="background-color: ${msg.avatarBg || '#c084fc'}; color: ${msg.avatarText || '#581c87'};">${escapeHTML(letter)}</div>
         <div class="cc-msg-content">
           <div class="cc-msg-meta">
-            <span class="cc-author">${escapeHTML(msg.author || 'Visitor')}</span>
+            <span class="cc-author">${escapeHTML(author)}</span>
             <span class="cc-time">${escapeHTML(msg.time || 'Just now')}</span>
           </div>
           <p class="cc-text">${escapeHTML(msg.text)}</p>
@@ -1465,8 +1471,63 @@ document.head.appendChild(style);
   const PRESENCE_TOPIC = 'dflowautomation/portfolio/presence';
   const CHAT_TOPIC = 'dflowautomation/portfolio/chat';
 
+  // Distinct user identification (e.g. user001, user002, etc.)
+  const userColorPalettes = [
+    { bg: '#fed7aa', text: '#7c2d12' }, // amber
+    { bg: '#c084fc', text: '#581c87' }, // purple
+    { bg: '#93c5fd', text: '#1e3a8a' }, // blue
+    { bg: '#86efac', text: '#14532d' }, // green
+    { bg: '#fca5a5', text: '#7f1d1d' }, // red
+    { bg: '#fde047', text: '#713f12' }, // yellow
+    { bg: '#f472b6', text: '#831843' }, // pink
+    { bg: '#67e8f9', text: '#164e63' }, // cyan
+    { bg: '#cbd5e1', text: '#1e293b' }  // slate
+  ];
+
+  function getUserPalette(userNum) {
+    const idx = Math.abs((userNum || 1) - 1) % userColorPalettes.length;
+    return userColorPalettes[idx];
+  }
+
+  function formatUserNum(num) {
+    return String(num || 1).padStart(3, '0');
+  }
+
+  let myUserNum = null;
+  try {
+    const cachedNum = sessionStorage.getItem('cc_user_num');
+    if (cachedNum && !isNaN(parseInt(cachedNum, 10))) {
+      myUserNum = parseInt(cachedNum, 10);
+    }
+  } catch (e) {}
+
   const activeTabs = new Map();
-  activeTabs.set(myTabId, Date.now());
+
+  function assignUserNumber() {
+    if (myUserNum) return;
+    const taken = new Set();
+    for (const [id, info] of activeTabs.entries()) {
+      if (info && info.userNum) {
+        taken.add(info.userNum);
+      }
+    }
+    let candidate = 1;
+    while (taken.has(candidate)) {
+      candidate++;
+    }
+    myUserNum = candidate;
+    try {
+      sessionStorage.setItem('cc_user_num', myUserNum);
+    } catch (e) {}
+  }
+
+  assignUserNumber();
+  activeTabs.set(myTabId, { ts: Date.now(), userNum: myUserNum });
+
+  function getMyUserTag() {
+    if (!myUserNum) assignUserNumber();
+    return 'user' + formatUserNum(myUserNum);
+  }
 
   // BroadcastChannel for instant same-browser profile sync
   let localBcPresence = null;
@@ -1482,7 +1543,8 @@ document.head.appendChild(style);
 
   function updateOnlineCounts() {
     const now = Date.now();
-    for (const [id, ts] of activeTabs.entries()) {
+    for (const [id, info] of activeTabs.entries()) {
+      const ts = typeof info === 'object' && info.ts ? info.ts : info;
       if (id !== myTabId && now - ts > 14000) {
         activeTabs.delete(id);
       }
@@ -1532,12 +1594,12 @@ document.head.appendChild(style);
     if (!data || !data.id || data.id === myTabId) return;
 
     if (data.type === 'join') {
-      activeTabs.set(data.id, Date.now());
+      activeTabs.set(data.id, { ts: Date.now(), userNum: data.userNum });
       updateOnlineCounts();
-      // Immediately reply with pong so newly joined tab registers us instantly
-      broadcastPresence({ type: 'pong', id: myTabId, ts: Date.now() }, true);
+      // Immediately reply with pong so newly joined tab registers us instantly with our userNum
+      broadcastPresence({ type: 'pong', id: myTabId, userNum: myUserNum, ts: Date.now() }, true);
     } else if (data.type === 'ping' || data.type === 'pong') {
-      activeTabs.set(data.id, Date.now());
+      activeTabs.set(data.id, { ts: Date.now(), userNum: data.userNum });
       updateOnlineCounts();
     } else if (data.type === 'leave') {
       activeTabs.delete(data.id);
@@ -1667,7 +1729,7 @@ document.head.appendChild(style);
           client.subscribe(PRESENCE_TOPIC);
           client.subscribe(CHAT_TOPIC);
           // Broadcast join message across all windows/devices
-          broadcastPresence({ type: 'join', id: myTabId, ts: Date.now() }, true);
+          broadcastPresence({ type: 'join', id: myTabId, userNum: myUserNum, ts: Date.now() }, true);
         },
         onFailure: (err) => {
           console.warn('Presence connection failed with ' + broker.host + ':', err);
@@ -1684,7 +1746,7 @@ document.head.appendChild(style);
 
   // Periodic heartbeat every 6 seconds
   setInterval(() => {
-    broadcastPresence({ type: 'ping', id: myTabId, ts: Date.now() }, true);
+    broadcastPresence({ type: 'ping', id: myTabId, userNum: myUserNum, ts: Date.now() }, true);
   }, 6000);
 
   // Prune expired sessions & update count every 1 second
@@ -1698,7 +1760,7 @@ document.head.appendChild(style);
   window.addEventListener('pagehide', handleLeave);
 
   // Announce join locally and start MQTT
-  broadcastPresence({ type: 'join', id: myTabId, ts: Date.now() }, false);
+  broadcastPresence({ type: 'join', id: myTabId, userNum: myUserNum, ts: Date.now() }, false);
   connectMqtt();
 
   // Send message
@@ -1708,35 +1770,25 @@ document.head.appendChild(style);
       const text = messageInput.value.trim();
       if (!text) return;
 
-      // Random avatar color
-      const bgColors = ['#fca5a5', '#cbd5e1', '#fed7aa', '#c084fc', '#818cf8', '#fed7aa'];
-      const textColors = ['#7f1d1d', '#334155', '#7c2d12', '#581c87', '#1e1b4b', '#7c2d12'];
-      const randIndex = Math.floor(Math.random() * bgColors.length);
+      assignUserNumber();
+      const userTag = getMyUserTag(); // "user001", "user002", etc.
+      const userCode = formatUserNum(myUserNum); // "001", "002", etc.
+      const palette = getUserPalette(myUserNum);
 
       const savedName = localStorage.getItem('cc_user_name');
-      const authorName = savedName ? `${savedName} (Visitor)` : 'You (Visitor)';
-      
-      // Generate initials if they have a saved name
-      let initials = 'YO';
-      if (savedName) {
-        const parts = savedName.trim().split(/\s+/);
-        if (parts.length > 1) {
-          initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-        } else if (parts.length > 0 && parts[0].length > 0) {
-          initials = parts[0][0].substring(0, 2).toUpperCase();
-        }
-      }
+      const authorName = savedName ? `${savedName} (${userTag})` : userTag;
 
       const msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
       const msgObj = {
         id: msgId,
         type: 'user',
         author: authorName,
+        userNum: myUserNum,
         time: 'Just now',
         text: text,
-        avatarBg: bgColors[randIndex],
-        avatarText: textColors[randIndex],
-        avatarLetter: initials
+        avatarBg: palette.bg,
+        avatarText: palette.text,
+        avatarLetter: userCode
       };
 
       savedMessages.push(msgObj);
