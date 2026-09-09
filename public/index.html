@@ -615,12 +615,13 @@
                         <i class="fas fa-video"></i> Generating Google Meet link...
                       </a>
                     </div>
-                    <p class="cal-booked-note"><i class="fas fa-envelope"></i> A Google Calendar invite has been sent to
-                      your email. Don will confirm 30 minutes before the call.</p>
+                    <p class="cal-booked-note" style="color: var(--clr-text); font-size: 0.9rem; line-height: 1.5; margin: 12px 0 20px;">
+                      <i class="fas fa-check-circle" style="color: #10b981;"></i> A booking confirmation and intake summary have been dispatched to your email and to <strong>dflowautomation@gmail.com</strong>.
+                    </p>
                     <div class="cal-booked-actions">
-                      <button class="btn-ghost" id="calAddToGcal"><i class="fab fa-google"></i> Add to Google
-                        Calendar</button>
-                      <button class="btn-ghost" id="bcfReset"><i class="fas fa-redo"></i> Fill another form</button>
+                      <button class="btn-primary" id="calAddToGcal"><i class="fab fa-google"></i> Add to Google Calendar</button>
+                      <button class="btn-ghost" id="calDownloadIcs"><i class="fas fa-calendar-alt"></i> Download .ICS Invite</button>
+                      <button class="btn-ghost" id="bcfReset"><i class="fas fa-redo"></i> Book Another Call</button>
                     </div>
                   </div>
                 </div>
@@ -1038,7 +1039,7 @@
 
   <!-- Paho MQTT WebSocket Client for Real-time Presence & Community Chat -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
-  <script src="script.js?v=2.2.0"></script>
+  <script src="script.js?v=2.3.0"></script>
 </body>
 
 </html>

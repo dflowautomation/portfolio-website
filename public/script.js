@@ -711,26 +711,236 @@ const TESTIMONIALS = [
 
 
 /* =============================================
-   7. BOOK A CALL FORM — Full Questionnaire
-   Validation + EmailJS email + Calendar booking
+   7. BOOK A CALL & STRATEGY SESSION SYSTEM
    ============================================= */
+
+/* ---- CONFIGURATION ----
+   1. EMAILJS: If you have an EmailJS account, enter your keys here:
+   2. BOOKING_WEBHOOK_URL: Optional webhook (e.g. n8n, Make, Zapier, Resend).
+   3. AUTOMATED DIRECT DISPATCH: Automatically sends booking summary to
+      dflowautomation@gmail.com and confirmation email to the client!
+------------------------------------------------------------- */
+const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+const EMAILJS_CLIENT_TEMPLATE_ID = 'YOUR_CLIENT_TEMPLATE_ID';
+const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
+const OWNER_EMAIL = 'dflowautomation@gmail.com';
+const BOOKING_WEBHOOK_URL = '';
+
+function parseDateSlot(dateObjOrStr, timeStr) {
+  let d;
+  if (dateObjOrStr instanceof Date) {
+    d = new Date(dateObjOrStr.getFullYear(), dateObjOrStr.getMonth(), dateObjOrStr.getDate());
+  } else if (typeof dateObjOrStr === 'string') {
+    const parsed = new Date(dateObjOrStr);
+    if (!isNaN(parsed.getTime())) {
+      d = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    } else {
+      d = new Date();
+    }
+  } else {
+    d = new Date();
+  }
+
+  if (timeStr) {
+    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (match) {
+      let hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const ampm = match[3].toUpperCase();
+      if (ampm === 'PM' && hours < 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+      d.setHours(hours, minutes, 0, 0);
+    }
+  }
+  return d;
+}
+
+function buildGCalUrl({ date, time, name, email }, meetUrl) {
+  const startDate = parseDateSlot(date, time);
+  const endDate = new Date(startDate.getTime() + 30 * 60000);
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = d => d.getUTCFullYear() +
+    pad(d.getUTCMonth() + 1) +
+    pad(d.getUTCDate()) + 'T' +
+    pad(d.getUTCHours()) +
+    pad(d.getUTCMinutes()) +
+    pad(d.getUTCSeconds()) + 'Z';
+
+  const start = fmt(startDate);
+  const end = fmt(endDate);
+  const title = encodeURIComponent('Free Strategy Call — DFlowAutomation');
+  const desc = encodeURIComponent(`Your free 30-minute strategy call with Don Sufrir (DFlowAutomation).\n\nBooking for: ${name || 'Client'}\nClient Email: ${email || 'N/A'}\nGoogle Meet Link: ${meetUrl}\n\nAutomations & AI Systems consultation.`);
+  const loc = encodeURIComponent(meetUrl);
+  const attendees = email ? `&add=dflowautomation@gmail.com,${encodeURIComponent(email)}` : `&add=dflowautomation@gmail.com`;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${desc}&location=${loc}${attendees}`;
+}
+
+function downloadIcsFile({ date, time, name, email }, meetUrl) {
+  const startDate = parseDateSlot(date, time);
+  const endDate = new Date(startDate.getTime() + 30 * 60 * 1000);
+  const pad = (n) => String(n).padStart(2, '0');
+  const formatIcsDate = (d) => {
+    return d.getUTCFullYear() +
+      pad(d.getUTCMonth() + 1) +
+      pad(d.getUTCDate()) + 'T' +
+      pad(d.getUTCHours()) +
+      pad(d.getUTCMinutes()) +
+      pad(d.getUTCSeconds()) + 'Z';
+  };
+
+  const uid = 'dflow-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9) + '@dflowautomation.site';
+  const now = formatIcsDate(new Date());
+  const dtStart = formatIcsDate(startDate);
+  const dtEnd = formatIcsDate(endDate);
+
+  const icsLines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//DFlowAutomation//Booking Calendar//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:REQUEST',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${now}`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    'SUMMARY:Free Strategy Call — DFlowAutomation',
+    `DESCRIPTION:Free 30-minute strategy call with Don Sufrir (DFlowAutomation).\\n\\nBooked for: ${name || 'Client'}\\nEmail: ${email || ''}\\nGoogle Meet: ${meetUrl}`,
+    `LOCATION:${meetUrl}`,
+    'ORGANIZER;CN="Don Sufrir":mailto:dflowautomation@gmail.com',
+    email ? `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN="${name || 'Client'}":mailto:${email}` : '',
+    'STATUS:CONFIRMED',
+    'BEGIN:VALARM',
+    'TRIGGER:-PT15M',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:Strategy Call with DFlowAutomation in 15 minutes',
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].filter(Boolean);
+
+  const icsContent = icsLines.join('\r\n');
+  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `dflowautomation-strategy-call-${dtStart.slice(0, 8)}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function sendBookingNotification(data) {
+  let sent = false;
+
+  const gcalLink = buildGCalUrl({
+    date: data.date_obj || data.booking_date,
+    time: data.booking_time,
+    name: data.from_name,
+    email: data.from_email
+  }, data.meet_url);
+
+  // 1. EmailJS (if user configured)
+  if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+    try {
+      emailjs.init(EMAILJS_PUBLIC_KEY);
+      const emailjsData = {
+        ...data,
+        gcal_link: gcalLink
+      };
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, emailjsData);
+      if (EMAILJS_CLIENT_TEMPLATE_ID && EMAILJS_CLIENT_TEMPLATE_ID !== 'YOUR_CLIENT_TEMPLATE_ID') {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_CLIENT_TEMPLATE_ID, emailjsData);
+      }
+      sent = true;
+      console.log('Booking notification sent via EmailJS');
+    } catch (err) {
+      console.warn('EmailJS error (falling back to direct dispatch):', err);
+    }
+  }
+
+  // 2. Custom Webhook (if provided)
+  if (!sent && BOOKING_WEBHOOK_URL) {
+    try {
+      const res = await fetch(BOOKING_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, gcal_link: gcalLink })
+      });
+      if (res.ok) {
+        sent = true;
+        console.log('Booking notification sent via Webhook');
+      }
+    } catch (err) {
+      console.warn('Webhook dispatch error:', err);
+    }
+  }
+
+  // 3. Automated Direct Dispatch to dflowautomation@gmail.com + Client Autoresponse
+  if (!sent) {
+    try {
+      const payload = {
+        _subject: `📅 New Strategy Call: ${data.from_name} — ${data.booking_date} at ${data.booking_time}`,
+        _replyto: data.from_email,
+        _template: 'table',
+        _captcha: 'false',
+        _autoresponse: `Hi ${data.from_name},\n\nThank you for scheduling your Strategy Call with DFlowAutomation!\n\nYour booking details:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 Date: ${data.booking_date}\n⏰ Time: ${data.booking_time} (Philippine Time)\n📹 Google Meet: ${data.meet_url}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nAdd this call to your Google Calendar in 1 click:\n${gcalLink}\n\nDon Sufrir will review your questionnaire answers before the call so we can jump right into high-impact automation recommendations for your business.\n\nNeed to reschedule or have questions beforehand? Simply reply directly to this email or contact dflowautomation@gmail.com.\n\nBest regards,\nDon Sufrir\nDFlowAutomation\nhttps://dflowautomation.site`,
+        'Client Name': data.from_name,
+        'Client Email': data.from_email,
+        'Client Phone': data.from_phone,
+        'Booking Date': data.booking_date,
+        'Booking Time': `${data.booking_time} (Philippine Time)`,
+        'Google Meet Link': data.meet_url,
+        'Add to Google Calendar': gcalLink,
+        'Business Description': data.biz_desc,
+        'Monthly Revenue / Team Size': data.revenue,
+        'Role in Business': data.role,
+        'Primary Process to Automate': data.top_process,
+        'Current Process Steps': data.process_steps,
+        'Hours Spent Weekly': data.hours_spent,
+        'Current Cost / Impact': data.cost,
+        'Tools Currently Used': data.tools_used,
+        'Tool Connectivity / API Status': data.connectivity,
+        'Preferred Platforms': data.platforms,
+        'Data Volume': data.volume,
+        'Security & Compliance': data.compliance,
+        '90-Day Success Vision': data.success_vision,
+        'Previous Automation Attempts': data.tried_before,
+        'Budget Range': data.budget,
+        'Desired Timeline': data.timeline,
+        'Referral Source': data.referral,
+        'Additional Notes': data.notes
+      };
+
+      const res = await fetch(`https://formsubmit.co/ajax/${OWNER_EMAIL}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        sent = true;
+        console.log('Automated booking notification and client autoresponse dispatched successfully.');
+      }
+    } catch (err) {
+      console.warn('Direct email dispatch failed:', err);
+    }
+  }
+
+  return sent;
+}
+
 (function initBookCallForm() {
   const form = document.getElementById('bookCallForm');
   const successDiv = document.getElementById('bcfSuccess');
   const submitBtn = document.getElementById('bcSubmitBtn');
 
   if (!form) return;
-
-  /* ---- EMAILJS CONFIG ----
-     To activate real email sending:
-     1. Sign up at https://www.emailjs.com (free 200 emails/mo)
-     2. Create a service + template
-     3. Replace these values:
-  ---------------------------------- */
-  const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
-  const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-  const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
-  const OWNER_EMAIL = 'dflowautomation@gmail.com';
 
   /* ---- VALIDATION ---- */
   function getVal(id) {
@@ -807,41 +1017,6 @@ const TESTIMONIALS = [
       to_email: OWNER_EMAIL,
       reply_to: getVal('bc-email'),
     };
-  }
-
-  /* ---- SEND EMAIL via EmailJS ---- */
-  async function sendEmail(data) {
-    // Initialize EmailJS
-    if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
-      try {
-        emailjs.init(EMAILJS_PUBLIC_KEY);
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, data);
-        return true;
-      } catch (err) {
-        console.warn('EmailJS error (using mailto fallback):', err);
-      }
-    }
-    // Fallback: open email selector with form summary
-    const subject = `Strategy Call Scheduled — ${data.from_name}`;
-    const body =
-      `STRATEGY CALL CONFIRMED & SCHEDULED\n\n` +
-      `Google Meet Link: ${data.meet_url || 'Generating...'}\n` +
-      `Date: ${data.booking_date || 'Not selected'}\n` +
-      `Time: ${data.booking_time || 'Not selected'} (Philippine Time)\n\n` +
-      `Attendee: ${data.from_name}\nEmail: ${data.from_email}\nPhone: ${data.from_phone}\n\n` +
-      `BUSINESS:\n${data.biz_desc}\nRevenue/Size: ${data.revenue}\nRole: ${data.role}\n\n` +
-      `PROBLEM:\n${data.top_process}\n\nBudget: ${data.budget}\nTimeline: ${data.timeline}\n\n` +
-      `Tools: ${data.tools_used}\nPlatforms: ${data.platforms}\n\nNotes: ${data.notes}`;
-
-    // Target both invitee (client) and inviter (owner)
-    const targetEmails = `${OWNER_EMAIL},${data.from_email}`;
-
-    if (typeof window.openEmailProviderSelector === 'function') {
-      window.openEmailProviderSelector(targetEmails, subject, body);
-    } else {
-      window.open(`mailto:${targetEmails}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-    }
-    return true;
   }
 
   /* ---- FORM SUBMIT ---- */
@@ -923,6 +1098,7 @@ function initCalendarWidget(userName, userEmail) {
   const prevBtn = document.getElementById('calPrev');
   const nextBtn = document.getElementById('calNext');
   const gcalBtn = document.getElementById('calAddToGcal');
+  const icsBtn = document.getElementById('calDownloadIcs');
   const resetBtn = document.getElementById('bcfReset');
 
   if (!gridEl) return;
@@ -1014,7 +1190,7 @@ function initCalendarWidget(userName, userEmail) {
     if (!selectedDate || !selectedTime) return;
     const opts = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
     const dateStr = selectedDate.toLocaleDateString('en-US', opts);
-    bookedData = { date: dateStr, time: selectedTime, name: userName, email: userEmail };
+    bookedData = { date: dateStr, time: selectedTime, name: userName, email: userEmail, dateObj: selectedDate };
 
     bookedMsg.textContent = `Your 30-minute strategy call is scheduled for ${dateStr} at ${selectedTime} (Philippine Time).`;
 
@@ -1032,8 +1208,13 @@ function initCalendarWidget(userName, userEmail) {
 
     // Update "Add to Google Calendar" link
     if (gcalBtn) {
-      const gcalUrl = buildGCalUrl(bookedData, meetUrl);
+      const gcalUrl = buildGCalUrl({ date: selectedDate, time: selectedTime, name: userName, email: userEmail }, meetUrl);
       gcalBtn.onclick = () => window.open(gcalUrl, '_blank');
+    }
+
+    // Update "Download .ICS Invite" button
+    if (icsBtn) {
+      icsBtn.onclick = () => downloadIcsFile({ date: selectedDate, time: selectedTime, name: userName, email: userEmail }, meetUrl);
     }
 
     // Trigger community chat notification
@@ -1041,28 +1222,24 @@ function initCalendarWidget(userName, userEmail) {
       window.triggerBookingNotification(userName, selectedTime, selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
     }
 
-    // Dispatch confirmation email to both invitee and inviter
-    if (window.tempBookingData) {
-      window.tempBookingData.booking_date = dateStr;
-      window.tempBookingData.booking_time = selectedTime;
-      window.tempBookingData.meet_url = meetUrl;
+    // Dispatch confirmation email to both client and Don Sufrir
+    const bookingPayload = window.tempBookingData ? { ...window.tempBookingData } : {
+      from_name: userName,
+      from_email: userEmail,
+      from_phone: 'N/A',
+      biz_desc: 'Direct calendar booking'
+    };
+    bookingPayload.booking_date = dateStr;
+    bookingPayload.booking_time = selectedTime;
+    bookingPayload.meet_url = meetUrl;
+    bookingPayload.date_obj = selectedDate;
 
-      // Send email
-      sendEmail(window.tempBookingData);
+    // Send automated email notifications
+    sendBookingNotification(bookingPayload);
 
-      // Clear temp data
-      window.tempBookingData = null;
-    }
-  }
-
-  function buildGCalUrl({ date, time, name }, meetUrl) {
-    const d = new Date(`${date} ${time}`);
-    const start = d.toISOString().replace(/-|:|\.\d+/g, '');
-    const end = new Date(d.getTime() + 30 * 60000).toISOString().replace(/-|:|\.\d+/g, '');
-    const title = encodeURIComponent('Free Strategy Call — DFlowAutomation');
-    const desc = encodeURIComponent(`Your free 30-minute strategy call with Don Sufrir (DFlowAutomation).\n\nBooking for: ${name}\n\nGoogle Meet Link: ${meetUrl}`);
-    const loc = encodeURIComponent(meetUrl);
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${desc}&location=${loc}`;
+    // Save as last booked data and clear temp
+    window.lastBookedData = bookingPayload;
+    window.tempBookingData = null;
   }
 
   // Month navigation
